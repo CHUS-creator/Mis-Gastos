@@ -4,7 +4,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 fun formatMoney(value: Double): String {
-    val fmt = NumberFormat.getCurrencyInstance(Locale("es", "ES"))
+    val fmt = NumberFormat.getCurrencyInstance(Locale.getDefault())
     return fmt.format(value)
 }
 

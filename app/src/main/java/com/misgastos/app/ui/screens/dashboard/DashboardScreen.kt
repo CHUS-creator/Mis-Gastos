@@ -34,9 +34,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.misgastos.app.R
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.ui.components.AddTransactionDialog
@@ -54,17 +56,16 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
     val recent by viewModel.recentTransactions.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
     var addType by remember { mutableStateOf(TransactionType.EXPENSE) }
-
     Scaffold(
-        topBar = { TopAppBar(title = { Text("MisGastos") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.dashboard_title)) }) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
                     addType = TransactionType.EXPENSE
                     showAdd = true
                 },
-                icon = { Icon(Icons.Filled.Add, contentDescription = "Añadir") },
-                text = { Text("Añadir") },
+                icon = { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_add)) },
+                text = { Text(stringResource(R.string.action_add)) },
             )
         },
     ) { padding ->
@@ -86,14 +87,14 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SummaryCard(
-                    title = "Ingresos del mes",
+                    title = stringResource(R.string.dashboard_month_income),
                     value = dashboard.monthIncome,
                     color = Green,
                     icon = Icons.Filled.ArrowUpward,
                     modifier = Modifier.weight(1f),
                 )
                 SummaryCard(
-                    title = "Gastos del mes",
+                    title = stringResource(R.string.dashboard_month_expenses),
                     value = dashboard.monthExpenses,
                     color = Red,
                     icon = Icons.Filled.ArrowDownward,
@@ -101,12 +102,12 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
                 )
             }
             Text(
-                text = "Balance del mes: ${formatMoney(dashboard.monthBalance)}",
+                text = stringResource(R.string.dashboard_month_balance, formatMoney(dashboard.monthBalance)),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                text = "Movimientos recientes",
+                text = stringResource(R.string.dashboard_recent),
                 style = MaterialTheme.typography.titleMedium,
             )
             RecentTransactionsList(
@@ -115,7 +116,6 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
             )
         }
     }
-
     if (showAdd) {
         AddTransactionDialog(
             type = addType,
@@ -150,7 +150,7 @@ private fun BalanceCard(balance: Double) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Balance total",
+                text = stringResource(R.string.dashboard_total_balance),
                 color = Color.White,
                 fontSize = 14.sp,
             )
@@ -215,7 +215,7 @@ private fun RecentTransactionsList(
 ) {
     if (transactions.isEmpty()) {
         Text(
-            text = "Aún no hay movimientos. Pulsa \"Añadir\" para registrar el primero.",
+            text = stringResource(R.string.dashboard_empty),
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(vertical = 16.dp),
         )

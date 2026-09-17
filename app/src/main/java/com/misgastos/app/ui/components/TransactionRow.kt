@@ -16,13 +16,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.misgastos.app.R
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.ui.theme.Green
 import com.misgastos.app.ui.theme.Red
 import com.misgastos.app.util.DateUtils
+import com.misgastos.app.util.categoryLabel
 
 @Composable
 fun TransactionRow(
@@ -46,7 +49,7 @@ fun TransactionRow(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = transaction.category,
+                    text = categoryLabel(transaction.category),
                     fontWeight = FontWeight.Medium,
                 )
                 if (transaction.description.isNotBlank()) {
@@ -71,7 +74,7 @@ fun TransactionRow(
             IconButton(onClick = { onDelete(transaction) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Eliminar",
+                    contentDescription = stringResource(R.string.action_delete),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

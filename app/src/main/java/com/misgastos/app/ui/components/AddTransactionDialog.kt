@@ -14,24 +14,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
+import com.misgastos.app.util.CategoryKey
 
 @Composable
 fun AddTransactionDialog(
     type: TransactionType,
-    categories: List<String>,
+    categories: List<CategoryKey>,
     onDismiss: () -> Unit,
     onConfirm: (amount: Double, category: String, description: String) -> Unit,
 ) {
     var amountText by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf(categories.firstOrNull() ?: "") }
+    var category by remember { mutableStateOf(categories.firstOrNull() ?: CategoryKey.OTHER_EXPENSE) }
     var description by remember { mutableStateOf("") }
     var amountError by remember { mutableStateOf(value = false) }
-
-    val title = if (type == TransactionType.EXPENSE) "Nuevo gasto" else "Nuevo ingreso"
-
+    val title = if (type == TransactionType.EXPENSE) {
+        stringResource(R.string.dialog_new_expense)
+    } else {
+        stringResource(R.string.dialog_new_income)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -46,7 +51,7 @@ fun AddTransactionDialog(
                         amountText = it.filter { c -> c.isDigit() || (c == '.') || (c == ',') }
                         amountError = false
                     },
-                    label = { Text("Importe") },
+                    label = { Text(stringResource(R.string.field_amount)) },
                     isError = amountError,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -57,13 +62,12 @@ fun AddTransactionDialog(
                         selected = category,
                         options = categories,
                         onSelectedChange = { category = it },
-                        label = "Categoría",
                     )
                 } else {
                     OutlinedTextField(
-                        value = category,
-                        onValueChange = { category = it },
-                        label = { Text("Categoría") },
+                        value = category.stableValue,
+                        onValueChange = { },
+                        label = { Text(stringResource(R.string.field_category)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -71,7 +75,7 @@ fun AddTransactionDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descripción") },
+                    label = { Text(stringResource(R.string.field_description)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -83,19 +87,19 @@ fun AddTransactionDialog(
                     val amount = amountText.replace(',', '.').toDoubleOrNull()
                     if ((amount == null) || (amount <= 0.0)) {
                         amountError = true
-                    } else if (category.isBlank()) {
+                    } else if (category.stableValue.isBlank()) {
                         amountError = false
                     } else {
-                        onConfirm(amount, category.trim(), description.trim())
+                        onConfirm(amount, category.stableValue, description.trim())
                         onDismiss()
                     }
                 },
             ) {
-                Text("Guardar")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
 }

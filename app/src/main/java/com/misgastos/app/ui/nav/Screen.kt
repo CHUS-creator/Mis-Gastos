@@ -1,18 +1,20 @@
 package com.misgastos.app.ui.nav
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.misgastos.app.R
 
-sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    data object Dashboard : Screen("dashboard", "Inicio", Icons.Filled.Dashboard)
-    data object Expenses : Screen("expenses", "Gastos", Icons.Filled.Wallet)
-    data object Income : Screen("income", "Ingresos", Icons.Filled.Savings)
-    data object Budget : Screen("budget", "Presupuestos", Icons.Filled.Savings)
-    data object Stats : Screen("stats", "Estadísticas", Icons.Filled.BarChart)
+sealed class Screen(val route: String, @StringRes val labelRes: Int, val icon: ImageVector) {
+    data object Dashboard : Screen("dashboard", R.string.nav_dashboard, Icons.Filled.Dashboard)
+    data object Expenses : Screen("expenses", R.string.nav_expenses, Icons.Filled.Wallet)
+    data object Income : Screen("income", R.string.nav_income, Icons.Filled.Savings)
+    data object Budget : Screen("budget", R.string.nav_budget, Icons.Filled.Savings)
+    data object Stats : Screen("stats", R.string.nav_stats, Icons.Filled.BarChart)
 }
 
 val screens = listOf(

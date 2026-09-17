@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -48,6 +49,7 @@ fun MisGastosNavHost() {
         bottomBar = {
             NavigationBar {
                 screens.forEach { screen ->
+                    val label = stringResource(screen.labelRes)
                     NavigationBarItem(
                         selected = currentRoute == screen.route,
                         onClick = {
@@ -59,8 +61,8 @@ fun MisGastosNavHost() {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = { Text(screen.label) },
+                        icon = { Icon(screen.icon, contentDescription = label) },
+                        label = { Text(label) },
                     )
                 }
             }

@@ -23,8 +23,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.ui.components.AddTransactionDialog
 import com.misgastos.app.ui.components.TransactionRow
@@ -39,14 +41,13 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
     val incomes by viewModel.incomes.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
-
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Ingresos") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.income_title)) }) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAdd = true },
-                icon = { Icon(Icons.Filled.Add, contentDescription = "Añadir ingreso") },
-                text = { Text("Ingreso") },
+                icon = { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_add_income)) },
+                text = { Text(stringResource(R.string.nav_income)) },
             )
         },
     ) { padding ->
@@ -58,7 +59,7 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Total ingresado este mes",
+                text = stringResource(R.string.income_total_month),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -70,7 +71,7 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
             )
             if (incomes.isEmpty()) {
                 Text(
-                    text = "No hay ingresos registrados todavía.",
+                    text = stringResource(R.string.income_empty),
                     modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
@@ -88,7 +89,6 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
             }
         }
     }
-
     if (showAdd) {
         AddTransactionDialog(
             type = TransactionType.INCOME,

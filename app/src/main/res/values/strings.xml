@@ -1,3 +1,72 @@
 <resources>
     <string name="app_name">MisGastos</string>
+
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_expenses">Gastos</string>
+    <string name="nav_income">Ingresos</string>
+    <string name="nav_budget">Presupuestos</string>
+    <string name="nav_stats">Estadísticas</string>
+
+    <string name="action_add">Añadir</string>
+    <string name="action_add_expense">Añadir gasto</string>
+    <string name="action_add_income">Añadir ingreso</string>
+    <string name="action_new_budget">Nuevo presupuesto</string>
+    <string name="action_new">Nuevo</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Eliminar</string>
+
+    <string name="field_amount">Importe</string>
+    <string name="field_category">Categoría</string>
+    <string name="field_description">Descripción</string>
+    <string name="field_monthly_limit">Límite mensual</string>
+
+    <string name="dialog_new_expense">Nuevo gasto</string>
+    <string name="dialog_new_income">Nuevo ingreso</string>
+    <string name="dialog_new_budget">Nuevo presupuesto</string>
+
+    <string name="dashboard_title">MisGastos</string>
+    <string name="dashboard_total_balance">Balance total</string>
+    <string name="dashboard_month_income">Ingresos del mes</string>
+    <string name="dashboard_month_expenses">Gastos del mes</string>
+    <string name="dashboard_month_balance">Balance del mes: %1$s</string>
+    <string name="dashboard_recent">Movimientos recientes</string>
+    <string name="dashboard_empty">Aún no hay movimientos. Pulsa \"Añadir\" para registrar el primero.</string>
+
+    <string name="expenses_title">Gastos</string>
+    <string name="expenses_total_month">Total gastado este mes</string>
+    <string name="expenses_empty">No hay gastos registrados todavía.</string>
+
+    <string name="income_title">Ingresos</string>
+    <string name="income_total_month">Total ingresado este mes</string>
+    <string name="income_empty">No hay ingresos registrados todavía.</string>
+
+    <string name="budget_title">Presupuestos</string>
+    <string name="budget_limits_by_category">Límites mensuales por categoría</string>
+    <string name="budget_empty">No hay presupuestos definidos. Crea uno con el botón \"Nuevo\".</string>
+    <string name="budget_spent_of_limit">%1$s de %2$s</string>
+    <string name="budget_remaining">Restante: %1$s</string>
+    <string name="budget_over_limit">Has superado el presupuesto</string>
+
+    <string name="stats_title">Estadísticas</string>
+    <string name="stats_by_category">Gastos por categoría - %1$s</string>
+    <string name="stats_total">Total: %1$s</string>
+    <string name="stats_empty">No hay datos suficientes para este mes.</string>
+
+    <string name="snackbar_budget_exceeded">Has superado el presupuesto de %1$s (%2$s / %3$s)</string>
+    <string name="snackbar_budget_near_limit">Estás cerca del límite en %1$s (%2$s / %3$s)</string>
+
+    <string name="cat_food">Comida</string>
+    <string name="cat_transport">Transporte</string>
+    <string name="cat_housing">Vivienda</string>
+    <string name="cat_leisure">Ocio</string>
+    <string name="cat_health">Salud</string>
+    <string name="cat_clothing">Ropa</string>
+    <string name="cat_subscriptions">Suscripciones</string>
+    <string name="cat_other_expense">Otros</string>
+    <string name="cat_salary">Salario</string>
+    <string name="cat_freelance">Freelance</string>
+    <string name="cat_investments">Inversiones</string>
+    <string name="cat_gift">Regalo</string>
+    <string name="cat_other_income">Otros</string>
 </resources>

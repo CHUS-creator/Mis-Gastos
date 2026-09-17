@@ -1,14 +1,17 @@
 package com.misgastos.app.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.misgastos.app.R
 import com.misgastos.app.data.dao.CategoryTotal
 import com.misgastos.app.data.entity.Budget
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.util.DateUtils
+import com.misgastos.app.util.categoryLabel
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +38,10 @@ data class BudgetStatus(
     val overLimit: Boolean,
 )
 
-class MisGastosViewModel(private val repository: MisGastosRepository) : ViewModel() {
+class MisGastosViewModel(
+    private val context: Context,
+    private val repository: MisGastosRepository,
+) : ViewModel() {
 
     private val now = System.currentTimeMillis()
 
@@ -152,10 +158,21 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
         val spent = totals.firstOrNull { it.category == category }?.total ?: 0.0
         val spentFormatted = String.format(Locale.getDefault(), "%.2f", spent)
         val limitFormatted = String.format(Locale.getDefault(), "%.2f", budget.monthlyLimit)
+        val categoryLabelStr = categoryLabel(context, category)
         if (spent > budget.monthlyLimit) {
-            _snackbar.value = "Has superado el presupuesto de $category ($spentFormatted / $limitFormatted)"
+            _snackbar.value = context.getString(
+                R.string.snackbar_budget_exceeded,
+                categoryLabelStr,
+                spentFormatted,
+                limitFormatted,
+            )
         } else if ((budget.monthlyLimit > 0) && (spent >= (budget.monthlyLimit * 0.8))) {
-            _snackbar.value = "Estás cerca del límite en $category ($spentFormatted / $limitFormatted)"
+            _snackbar.value = context.getString(
+                R.string.snackbar_budget_near_limit,
+                categoryLabelStr,
+                spentFormatted,
+                limitFormatted,
+            )
         }
     }
 
@@ -166,7 +183,7 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
                 val app = misGastosApplication
                 val db = com.misgastos.app.data.database.MisGastosDatabase.getInstance(app)
                 val repo = MisGastosRepository(db.transactionDao(), db.budgetDao())
-                return MisGastosViewModel(repo) as T
+                return MisGastosViewModel(app, repo) as T
             }
         }
     }

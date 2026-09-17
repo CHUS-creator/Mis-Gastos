@@ -23,9 +23,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.misgastos.app.R
 import com.misgastos.app.ui.components.formatMoney
+import com.misgastos.app.util.categoryLabel
 import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,9 +36,8 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 fun StatsScreen(viewModel: MisGastosViewModel) {
     val categories by viewModel.monthExpensesByCategory.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
-
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Estadísticas") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.stats_title)) }) },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -45,18 +47,18 @@ fun StatsScreen(viewModel: MisGastosViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "Gastos por categoría - ${dashboard.monthLabel}",
+                text = stringResource(R.string.stats_by_category, dashboard.monthLabel),
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = "Total: ${formatMoney(dashboard.monthExpenses)}",
+                text = stringResource(R.string.stats_total, formatMoney(dashboard.monthExpenses)),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error,
             )
             if (categories.isEmpty()) {
                 Text(
-                    text = "No hay datos suficientes para este mes.",
+                    text = stringResource(R.string.stats_empty),
                     modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
@@ -99,7 +101,7 @@ private fun CategoryBar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(text = category, fontWeight = FontWeight.Medium)
+                Text(text = categoryLabel(category), fontWeight = FontWeight.Medium)
                 Text(text = formatMoney(total), fontWeight = FontWeight.Bold)
             }
             Box(

@@ -14,14 +14,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.misgastos.app.R
+import com.misgastos.app.util.CategoryKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryDropdown(
-    selected: String,
-    options: List<String>,
-    onSelectedChange: (String) -> Unit,
-    label: String,
+    selected: CategoryKey,
+    options: List<CategoryKey>,
+    onSelectedChange: (CategoryKey) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(value = false) }
@@ -31,10 +33,10 @@ fun CategoryDropdown(
         modifier = modifier,
     ) {
         OutlinedTextField(
-            value = selected,
+            value = stringResource(selected.labelRes),
             onValueChange = {},
             readOnly = true,
-            label = { Text(label) },
+            label = { Text(stringResource(R.string.field_category)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
         )
@@ -44,7 +46,7 @@ fun CategoryDropdown(
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(stringResource(option.labelRes)) },
                     onClick = {
                         onSelectedChange(option)
                         expanded = false

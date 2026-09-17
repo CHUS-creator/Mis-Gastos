@@ -6,8 +6,8 @@ import java.util.Date
 import java.util.Locale
 
 object DateUtils {
-    private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
-    private val monthFmt = SimpleDateFormat("MMMM yyyy", Locale("es", "ES"))
+    private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val monthFmt = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
 
     fun formatDate(timestamp: Long): String = dateFmt.format(Date(timestamp))
 
