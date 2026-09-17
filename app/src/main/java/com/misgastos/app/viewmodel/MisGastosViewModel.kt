@@ -159,11 +159,16 @@ class MisGastosViewModel(
     }
 
     private suspend fun applyMerchantHint(receipt: EditableReceipt): EditableReceipt {
-        val merchant = receipt.merchant.trim().takeIf { it.isNotBlank() } ?: return receipt
+        val merchant = normalizeMerchant(receipt.merchant) ?: return receipt
         val hint = repository.getMerchantHint(merchant) ?: return receipt
         val key = CategoryKey.fromValue(hint.category) ?: return receipt
         return receipt.copy(suggestedCategory = key)
     }
+
+    private fun normalizeMerchant(merchant: String): String? =
+        merchant.trim().lowercase(Locale.getDefault())
+            .replace(Regex("\\s+"), " ")
+            .takeIf { it.isNotBlank() }
 
     fun consumeScanState() {
         _scanState.value = ScanState.Idle
@@ -193,7 +198,7 @@ class MisGastosViewModel(
                 .filter { it.name.isNotBlank() && it.price > 0.0 }
                 .map { LineItem(name = it.name, price = it.price, quantity = it.quantity) }
             repository.addTransactionWithItems(transaction, items)
-            val merchant = receipt.merchant.trim().takeIf { it.isNotBlank() }
+            val merchant = normalizeMerchant(receipt.merchant)
             if (merchant != null) repository.saveMerchantHint(merchant, category)
             _pendingReceipt.value = null
             checkBudgetAlerts(category)
