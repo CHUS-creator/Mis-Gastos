@@ -34,7 +34,6 @@ import com.misgastos.app.ui.components.TransactionRow
 import com.misgastos.app.ui.components.formatMoney
 import com.misgastos.app.util.Categories
 import com.misgastos.app.util.CategoryKey
-import com.misgastos.app.util.categoryLabel
 import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +52,7 @@ fun ExpensesScreen(
             val matchesQuery = query.isBlank() ||
                 tx.merchant.contains(query, ignoreCase = true) ||
                 tx.description.contains(query, ignoreCase = true) ||
-                categoryLabel(tx.category).contains(query, ignoreCase = true)
+                tx.category.contains(query, ignoreCase = true)
             val matchesCategory = categoryFilter == null || tx.category == categoryFilter?.stableValue
             matchesQuery && matchesCategory
         }

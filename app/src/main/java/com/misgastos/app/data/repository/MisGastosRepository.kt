@@ -14,6 +14,7 @@ import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.util.DateUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class MisGastosRepository(
     private val transactionDao: TransactionDao,

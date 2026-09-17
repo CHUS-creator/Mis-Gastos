@@ -24,6 +24,7 @@ sealed class Screen(val route: String, @StringRes val labelRes: Int, val icon: I
             const val route = "detail/{transactionId}"
         }
     }
+}
 
 val screens = listOf(
     Screen.Dashboard,
