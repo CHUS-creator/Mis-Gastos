@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -51,7 +53,10 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(viewModel: MisGastosViewModel) {
+fun DashboardScreen(
+    viewModel: MisGastosViewModel,
+    onScanClick: () -> Unit = {},
+) {
     val dashboard by viewModel.dashboard.collectAsState()
     val recent by viewModel.recentTransactions.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
@@ -59,14 +64,34 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.dashboard_title)) }) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    addType = TransactionType.EXPENSE
-                    showAdd = true
-                },
-                icon = { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_add)) },
-                text = { Text(stringResource(R.string.action_add)) },
-            )
+            var menuExpanded by remember { mutableStateOf(false) }
+            Column(horizontalAlignment = Alignment.End) {
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.add_manual)) },
+                        onClick = {
+                            menuExpanded = false
+                            addType = TransactionType.EXPENSE
+                            showAdd = true
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.add_scan)) },
+                        onClick = {
+                            menuExpanded = false
+                            onScanClick()
+                        },
+                    )
+                }
+                ExtendedFloatingActionButton(
+                    onClick = { menuExpanded = true },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_add)) },
+                    text = { Text(stringResource(R.string.action_add)) },
+                )
+            }
         },
     ) { padding ->
         Column(

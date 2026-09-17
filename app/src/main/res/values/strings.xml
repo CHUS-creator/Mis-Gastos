@@ -56,6 +56,31 @@
     <string name="snackbar_budget_exceeded">Has superado el presupuesto de %1$s (%2$s / %3$s)</string>
     <string name="snackbar_budget_near_limit">Estás cerca del límite en %1$s (%2$s / %3$s)</string>
 
+    <string name="add_manual">Manual</string>
+    <string name="add_scan">Escanear ticket</string>
+
+    <string name="scan_title">Escanear ticket</string>
+    <string name="scan_camera">Cámara</string>
+    <string name="scan_gallery">Galería</string>
+    <string name="scan_capture">Capturar</string>
+    <string name="scan_hint">Encuadra el ticket y pulsa capturar</string>
+    <string name="scan_permission_camera_title">Permiso de cámara</string>
+    <string name="scan_permission_camera_rationale">MisGastos necesita acceso a la cámara para escanear tickets.</string>
+    <string name="scan_permission_grant">Conceder permiso</string>
+    <string name="scan_processing_title">Procesando ticket…</string>
+    <string name="scan_processing_subtitle">Reconociendo texto con OCR</string>
+    <string name="scan_error_recognition">No se pudo reconocer el texto del ticket. Inténtalo de nuevo.</string>
+
+    <string name="review_title">Revisar ticket</string>
+    <string name="review_merchant">Comercio</string>
+    <string name="review_date">Fecha del ticket</string>
+    <string name="review_line_items">Líneas del ticket</string>
+    <string name="review_add_line_item">Añadir línea</string>
+    <string name="review_empty">No se detectaron campos. Rellena manualmente.</string>
+    <string name="field_line_name">Producto</string>
+    <string name="field_line_price">Precio</string>
+    <string name="field_line_qty">Cant.</string>
+
     <string name="cat_food">Comida</string>
     <string name="cat_transport">Transporte</string>
     <string name="cat_housing">Vivienda</string>

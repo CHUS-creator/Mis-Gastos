@@ -6,9 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.misgastos.app.data.dao.BudgetDao
+import com.misgastos.app.data.dao.LineItemDao
 import com.misgastos.app.data.dao.TransactionDao
 import com.misgastos.app.data.entity.Budget
+import com.misgastos.app.data.entity.EntrySource
+import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 
@@ -18,17 +23,44 @@ class Converters {
 
     @TypeConverter
     fun toTransactionType(value: String): TransactionType = TransactionType.valueOf(value)
+
+    @TypeConverter
+    fun fromEntrySource(source: EntrySource): String = source.name
+
+    @TypeConverter
+    fun toEntrySource(value: String): EntrySource = EntrySource.valueOf(value)
+}
+
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE transactions ADD COLUMN merchant TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE transactions ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS line_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                transactionId INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                price REAL NOT NULL,
+                quantity REAL NOT NULL,
+                FOREIGN KEY(transactionId) REFERENCES transactions(id) ON DELETE CASCADE
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_line_items_transactionId ON line_items(transactionId)")
+    }
 }
 
 @Database(
-    entities = [Transaction::class, Budget::class],
-    version = 1,
+    entities = [Transaction::class, Budget::class, LineItem::class],
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
 abstract class MisGastosDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun budgetDao(): BudgetDao
+    abstract fun lineItemDao(): LineItemDao
 
     companion object {
         @Volatile
@@ -40,9 +72,11 @@ abstract class MisGastosDatabase : RoomDatabase() {
                     context.applicationContext,
                     MisGastosDatabase::class.java,
                     "misgastos.db",
-                ).fallbackToDestructiveMigration().build().also {
-                    INSTANCE = it
-                }
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build().also {
+                        INSTANCE = it
+                    }
             }
         }
     }

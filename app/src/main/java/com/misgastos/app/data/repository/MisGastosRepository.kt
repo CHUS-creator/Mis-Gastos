@@ -2,8 +2,10 @@ package com.misgastos.app.data.repository
 
 import com.misgastos.app.data.dao.BudgetDao
 import com.misgastos.app.data.dao.CategoryTotal
+import com.misgastos.app.data.dao.LineItemDao
 import com.misgastos.app.data.dao.TransactionDao
 import com.misgastos.app.data.entity.Budget
+import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.util.DateUtils
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 class MisGastosRepository(
     private val transactionDao: TransactionDao,
     private val budgetDao: BudgetDao,
+    private val lineItemDao: LineItemDao,
 ) {
     fun getAllTransactions(): Flow<List<Transaction>> = transactionDao.getAll()
 
@@ -57,6 +60,17 @@ class MisGastosRepository(
 
     suspend fun addTransaction(transaction: Transaction): Long =
         transactionDao.insert(transaction)
+
+    suspend fun addTransactionWithItems(transaction: Transaction, items: List<LineItem>): Long {
+        val txId = transactionDao.insert(transaction)
+        if (items.isNotEmpty()) {
+            lineItemDao.insertAll(items.map { it.copy(transactionId = txId) })
+        }
+        return txId
+    }
+
+    suspend fun getLineItemsForTransaction(transactionId: Long): List<LineItem> =
+        lineItemDao.getForTransactionOnce(transactionId)
 
     @Suppress("unused")
     suspend fun updateTransaction(transaction: Transaction) =

@@ -25,8 +25,12 @@ import com.misgastos.app.ui.screens.budget.BudgetScreen
 import com.misgastos.app.ui.screens.dashboard.DashboardScreen
 import com.misgastos.app.ui.screens.expenses.ExpensesScreen
 import com.misgastos.app.ui.screens.income.IncomeScreen
+import com.misgastos.app.ui.screens.scan.ReviewReceiptScreen
+import com.misgastos.app.ui.screens.scan.ScanCameraScreen
+import com.misgastos.app.ui.screens.scan.ScanEntryScreen
 import com.misgastos.app.ui.screens.stats.StatsScreen
 import com.misgastos.app.viewmodel.MisGastosViewModel
+import com.misgastos.app.viewmodel.ScanState
 
 @Composable
 fun MisGastosNavHost() {
@@ -44,10 +48,28 @@ fun MisGastosNavHost() {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val showBottomBar = currentRoute in screens.map { it.route }
+
+    val scanState by viewModel.scanState.collectAsState()
+    LaunchedEffect(scanState) {
+        when (scanState) {
+            is ScanState.Done -> {
+                navController.navigate(Screen.Review.route) {
+                    launchSingleTop = true
+                }
+                viewModel.consumeScanState()
+            }
+            ScanState.Error -> {
+                snackbarHostState.showSnackbar("Error")
+                viewModel.consumeScanState()
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            if (showBottomBar) NavigationBar {
                 screens.forEach { screen ->
                     val label = stringResource(screen.labelRes)
                     NavigationBarItem(
@@ -74,11 +96,38 @@ fun MisGastosNavHost() {
             startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(
+                    viewModel = viewModel,
+                    onScanClick = { navController.navigate(Screen.ScanEntry.route) },
+                )
+            }
             composable(Screen.Expenses.route) { ExpensesScreen(viewModel) }
             composable(Screen.Income.route) { IncomeScreen(viewModel) }
             composable(Screen.Budget.route) { BudgetScreen(viewModel) }
             composable(Screen.Stats.route) { StatsScreen(viewModel) }
+            composable(Screen.ScanEntry.route) {
+                ScanEntryScreen(
+                    onCameraGranted = { navController.navigate(Screen.ScanCamera.route) },
+                    onImagePicked = { uri -> viewModel.processReceipt(uri) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.ScanCamera.route) {
+                ScanCameraScreen(
+                    onCaptured = { uri -> viewModel.processReceipt(uri) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.Review.route) {
+                ReviewReceiptScreen(
+                    viewModel = viewModel,
+                    onSaved = {
+                        navController.popBackStack(Screen.Dashboard.route, inclusive = false)
+                    },
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
     }
 }

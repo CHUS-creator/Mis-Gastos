@@ -11,6 +11,10 @@ data class Transaction(
     val category: String,
     val description: String,
     val date: Long,
+    val merchant: String = "",
+    val source: EntrySource = EntrySource.MANUAL,
 )
 
 enum class TransactionType { INCOME, EXPENSE }
+
+enum class EntrySource { MANUAL, SCAN }

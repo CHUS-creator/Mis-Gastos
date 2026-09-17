@@ -7,11 +7,18 @@ import androidx.lifecycle.viewModelScope
 import com.misgastos.app.R
 import com.misgastos.app.data.dao.CategoryTotal
 import com.misgastos.app.data.entity.Budget
+import com.misgastos.app.data.entity.EntrySource
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
+import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
+import com.misgastos.app.ocr.OcrRecognizer
+import com.misgastos.app.ocr.ParsedLineItem
+import com.misgastos.app.ocr.ParsedReceipt
+import com.misgastos.app.ocr.ReceiptParser
 import com.misgastos.app.util.DateUtils
 import com.misgastos.app.util.categoryLabel
+import android.net.Uri
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -106,6 +113,14 @@ class MisGastosViewModel(
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar: StateFlow<String?> = _snackbar.asStateFlow()
 
+    private val ocrRecognizer = OcrRecognizer()
+
+    private val _scanState = MutableStateFlow<ScanState>(ScanState.Idle)
+    val scanState: StateFlow<ScanState> = _scanState.asStateFlow()
+
+    private val _pendingReceipt = MutableStateFlow<EditableReceipt?>(null)
+    val pendingReceipt: StateFlow<EditableReceipt?> = _pendingReceipt.asStateFlow()
+
     fun addTransaction(
         type: TransactionType,
         amount: Double,
@@ -125,6 +140,56 @@ class MisGastosViewModel(
             )
             checkBudgetAlerts(category)
         }
+    }
+
+    fun processReceipt(uri: Uri) {
+        _scanState.value = ScanState.Processing
+        viewModelScope.launch {
+            runCatching { ocrRecognizer.recognize(context, uri) }
+                .onSuccess { text ->
+                    val parsed = ReceiptParser.parse(text)
+                    _pendingReceipt.value = EditableReceipt.fromParsed(uri, parsed)
+                    _scanState.value = ScanState.Done(uri)
+                }
+                .onFailure { _scanState.value = ScanState.Error }
+        }
+    }
+
+    fun consumeScanState() {
+        _scanState.value = ScanState.Idle
+    }
+
+    fun updatePendingReceipt(receipt: EditableReceipt) {
+        _pendingReceipt.value = receipt
+    }
+
+    fun savePendingReceipt(
+        type: TransactionType,
+        category: String,
+        receipt: EditableReceipt,
+    ) {
+        viewModelScope.launch {
+            val amount = receipt.total
+            val transaction = Transaction(
+                type = type,
+                amount = amount,
+                category = category,
+                description = receipt.description,
+                date = receipt.dateTimestamp,
+                merchant = receipt.merchant,
+                source = EntrySource.SCAN,
+            )
+            val items = receipt.lineItems
+                .filter { it.name.isNotBlank() && it.price > 0.0 }
+                .map { LineItem(name = it.name, price = it.price, quantity = it.quantity) }
+            repository.addTransactionWithItems(transaction, items)
+            _pendingReceipt.value = null
+            checkBudgetAlerts(category)
+        }
+    }
+
+    fun cancelPendingReceipt() {
+        _pendingReceipt.value = null
     }
 
     fun deleteTransaction(transaction: Transaction) {
@@ -182,10 +247,58 @@ class MisGastosViewModel(
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val app = misGastosApplication
                 val db = com.misgastos.app.data.database.MisGastosDatabase.getInstance(app)
-                val repo = MisGastosRepository(db.transactionDao(), db.budgetDao())
+                val repo = MisGastosRepository(
+                    db.transactionDao(),
+                    db.budgetDao(),
+                    db.lineItemDao(),
+                )
                 return MisGastosViewModel(app, repo) as T
             }
         }
+    }
+}
+
+sealed class ScanState {
+    data object Idle : ScanState()
+    data object Processing : ScanState()
+    data object Error : ScanState()
+    data class Done(val uri: Uri) : ScanState()
+}
+
+data class EditableLineItem(
+    val name: String = "",
+    val price: Double = 0.0,
+    val quantity: Double = 1.0,
+)
+
+data class EditableReceipt(
+    val imageUri: Uri,
+    val merchant: String = "",
+    val dateText: String = "",
+    val dateTimestamp: Long = System.currentTimeMillis(),
+    val total: Double = 0.0,
+    val description: String = "",
+    val lineItems: List<EditableLineItem> = emptyList(),
+    val rawText: String = "",
+) {
+    companion object {
+        fun fromParsed(uri: Uri, parsed: ParsedReceipt): EditableReceipt =
+            EditableReceipt(
+                imageUri = uri,
+                merchant = parsed.merchant.orEmpty(),
+                dateText = parsed.date.orEmpty(),
+                dateTimestamp = System.currentTimeMillis(),
+                total = parsed.total ?: 0.0,
+                description = parsed.merchant.orEmpty(),
+                lineItems = parsed.lineItems.map {
+                    EditableLineItem(
+                        name = it.name,
+                        price = it.price,
+                        quantity = it.quantity,
+                    )
+                },
+                rawText = parsed.rawText,
+            )
     }
 }
 

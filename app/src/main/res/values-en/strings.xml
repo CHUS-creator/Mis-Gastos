@@ -56,6 +56,31 @@
     <string name="snackbar_budget_exceeded">You have exceeded the budget for %1$s (%2$s / %3$s)</string>
     <string name="snackbar_budget_near_limit">You are close to the limit on %1$s (%2$s / %3$s)</string>
 
+    <string name="add_manual">Manual</string>
+    <string name="add_scan">Scan receipt</string>
+
+    <string name="scan_title">Scan receipt</string>
+    <string name="scan_camera">Camera</string>
+    <string name="scan_gallery">Gallery</string>
+    <string name="scan_capture">Capture</string>
+    <string name="scan_hint">Frame the receipt and tap capture</string>
+    <string name="scan_permission_camera_title">Camera permission</string>
+    <string name="scan_permission_camera_rationale">MisGastos needs camera access to scan receipts.</string>
+    <string name="scan_permission_grant">Grant permission</string>
+    <string name="scan_processing_title">Processing receipt…</string>
+    <string name="scan_processing_subtitle">Recognizing text with OCR</string>
+    <string name="scan_error_recognition">Could not recognize the receipt text. Please try again.</string>
+
+    <string name="review_title">Review receipt</string>
+    <string name="review_merchant">Merchant</string>
+    <string name="review_date">Receipt date</string>
+    <string name="review_line_items">Receipt lines</string>
+    <string name="review_add_line_item">Add line</string>
+    <string name="review_empty">No fields detected. Fill in manually.</string>
+    <string name="field_line_name">Item</string>
+    <string name="field_line_price">Price</string>
+    <string name="field_line_qty">Qty</string>
+
     <string name="cat_food">Food</string>
     <string name="cat_transport">Transport</string>
     <string name="cat_housing">Housing</string>
