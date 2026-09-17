@@ -11,11 +11,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.misgastos.app.data.dao.BudgetDao
 import com.misgastos.app.data.dao.LineItemDao
 import com.misgastos.app.data.dao.MerchantHintDao
+import com.misgastos.app.data.dao.MerchantTemplateDao
 import com.misgastos.app.data.dao.TransactionDao
 import com.misgastos.app.data.entity.Budget
 import com.misgastos.app.data.entity.EntrySource
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.entity.MerchantHint
+import com.misgastos.app.data.entity.MerchantTemplate
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 
@@ -66,9 +68,23 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS merchant_templates (
+                merchant TEXT NOT NULL PRIMARY KEY,
+                totalKeyword TEXT NOT NULL,
+                dateFormat TEXT
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 @Database(
-    entities = [Transaction::class, Budget::class, LineItem::class, MerchantHint::class],
-    version = 3,
+    entities = [Transaction::class, Budget::class, LineItem::class, MerchantHint::class, MerchantTemplate::class],
+    version = 4,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -77,6 +93,7 @@ abstract class MisGastosDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
     abstract fun lineItemDao(): LineItemDao
     abstract fun merchantHintDao(): MerchantHintDao
+    abstract fun merchantTemplateDao(): MerchantTemplateDao
 
     companion object {
         @Volatile
@@ -89,7 +106,7 @@ abstract class MisGastosDatabase : RoomDatabase() {
                     MisGastosDatabase::class.java,
                     "misgastos.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build().also {
                         INSTANCE = it
                     }

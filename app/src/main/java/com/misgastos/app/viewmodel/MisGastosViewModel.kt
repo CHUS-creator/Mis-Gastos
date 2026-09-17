@@ -13,6 +13,7 @@ import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
+import com.misgastos.app.ocr.ReceiptTemplate
 import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
@@ -151,7 +152,8 @@ class MisGastosViewModel(
         viewModelScope.launch {
             runCatching { ocrRecognizer.recognize(context, uri) }
                 .onSuccess { text ->
-                    val parsed = ReceiptParser.parse(text)
+                    val template = lookupTemplate(text)
+                    val parsed = ReceiptParser.parse(text, template)
                     val receipt = EditableReceipt.fromParsed(uri, parsed)
                     val hinted = applyMerchantHint(receipt)
                     _pendingReceipt.value = hinted
@@ -159,6 +161,13 @@ class MisGastosViewModel(
                 }
                 .onFailure { _scanState.value = ScanState.Error }
         }
+    }
+
+    private suspend fun lookupTemplate(rawText: String): ReceiptTemplate? {
+        val parsed = ReceiptParser.parse(rawText)
+        val merchant = normalizeMerchant(parsed.merchant.orEmpty()) ?: return null
+        val stored = repository.getMerchantTemplate(merchant) ?: return null
+        return ReceiptTemplate(totalKeyword = stored.totalKeyword, dateFormat = stored.dateFormat)
     }
 
     private suspend fun applyMerchantHint(receipt: EditableReceipt): EditableReceipt {
@@ -202,7 +211,14 @@ class MisGastosViewModel(
                 .map { LineItem(name = it.name, price = it.price, quantity = it.quantity) }
             repository.addTransactionWithItems(transaction, items)
             val merchant = normalizeMerchant(receipt.merchant)
-            if (merchant != null) repository.saveMerchantHint(merchant, category)
+            if (merchant != null) {
+                repository.saveMerchantHint(merchant, category)
+                val totalKeyword = ReceiptParser.detectTotalKeyword(receipt.rawText)
+                val dateFormat = ReceiptParser.detectDateFormat(receipt.dateText)
+                if (totalKeyword != null) {
+                    repository.saveMerchantTemplate(merchant, totalKeyword, dateFormat)
+                }
+            }
             _pendingReceipt.value = null
             checkBudgetAlerts(category)
         }
@@ -286,6 +302,7 @@ class MisGastosViewModel(
                     db.budgetDao(),
                     db.lineItemDao(),
                     db.merchantHintDao(),
+                    db.merchantTemplateDao(),
                 )
                 return MisGastosViewModel(app, repo) as T
             }
