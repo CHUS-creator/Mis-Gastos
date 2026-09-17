@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
@@ -31,13 +32,16 @@ import com.misgastos.app.util.categoryLabel
 fun TransactionRow(
     transaction: Transaction,
     onDelete: (Transaction) -> Unit = {},
+    onClick: () -> Unit = {},
 ) {
     val isIncome = transaction.type == TransactionType.INCOME
     val color = if (isIncome) Green else Red
     val sign = if (isIncome) "+" else "-"
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Row(

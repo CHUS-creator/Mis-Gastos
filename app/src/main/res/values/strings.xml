@@ -81,6 +81,19 @@
     <string name="field_line_price">Precio</string>
     <string name="field_line_qty">Cant.</string>
 
+    <string name="detail_title">Detalle</string>
+    <string name="detail_merchant">Comercio</string>
+    <string name="detail_date">Fecha</string>
+    <string name="detail_category">Categoría</string>
+    <string name="detail_amount">Importe</string>
+    <string name="detail_description">Descripción</string>
+    <string name="detail_source">Origen</string>
+    <string name="detail_source_manual">Manual</string>
+    <string name="detail_source_scan">Ticket escaneado</string>
+    <string name="detail_line_items">Líneas del ticket</string>
+    <string name="detail_no_lines">Esta transacción no tiene líneas de producto.</string>
+    <string name="detail_empty">No se encontró la transacción.</string>
+
     <string name="cat_food">Comida</string>
     <string name="cat_transport">Transporte</string>
     <string name="cat_housing">Vivienda</string>

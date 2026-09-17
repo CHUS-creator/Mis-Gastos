@@ -37,7 +37,10 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IncomeScreen(viewModel: MisGastosViewModel) {
+fun IncomeScreen(
+    viewModel: MisGastosViewModel,
+    onTransactionClick: (Long) -> Unit = {},
+) {
     val incomes by viewModel.incomes.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
@@ -83,6 +86,7 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
                         TransactionRow(
                             transaction = income,
                             onDelete = viewModel::deleteTransaction,
+                            onClick = { onTransactionClick(income.id) },
                         )
                     }
                 }

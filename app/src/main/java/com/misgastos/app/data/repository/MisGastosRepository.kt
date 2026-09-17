@@ -64,6 +64,8 @@ class MisGastosRepository(
     suspend fun addTransaction(transaction: Transaction): Long =
         transactionDao.insert(transaction)
 
+    suspend fun getTransaction(id: Long): Transaction? = transactionDao.getById(id)
+
     suspend fun addTransactionWithItems(transaction: Transaction, items: List<LineItem>): Long {
         val txId = transactionDao.insert(transaction)
         if (items.isNotEmpty()) {

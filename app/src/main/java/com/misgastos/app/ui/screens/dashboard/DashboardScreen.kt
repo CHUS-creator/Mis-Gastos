@@ -56,6 +56,7 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 fun DashboardScreen(
     viewModel: MisGastosViewModel,
     onScanClick: () -> Unit = {},
+    onTransactionClick: (Long) -> Unit = {},
 ) {
     val dashboard by viewModel.dashboard.collectAsState()
     val recent by viewModel.recentTransactions.collectAsState()
@@ -138,6 +139,7 @@ fun DashboardScreen(
             RecentTransactionsList(
                 transactions = recent,
                 onDelete = viewModel::deleteTransaction,
+                onTransactionClick = onTransactionClick,
             )
         }
     }
@@ -237,6 +239,7 @@ private fun SummaryCard(
 private fun RecentTransactionsList(
     transactions: List<Transaction>,
     onDelete: (Transaction) -> Unit,
+    onTransactionClick: (Long) -> Unit = {},
 ) {
     if (transactions.isEmpty()) {
         Text(
@@ -251,7 +254,11 @@ private fun RecentTransactionsList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(transactions.take(20)) { transaction ->
-            TransactionRow(transaction = transaction, onDelete = onDelete)
+            TransactionRow(
+                transaction = transaction,
+                onDelete = onDelete,
+                onClick = { onTransactionClick(transaction.id) },
+            )
         }
     }
 }

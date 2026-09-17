@@ -122,6 +122,9 @@ class MisGastosViewModel(
     private val _pendingReceipt = MutableStateFlow<EditableReceipt?>(null)
     val pendingReceipt: StateFlow<EditableReceipt?> = _pendingReceipt.asStateFlow()
 
+    private val _detailState = MutableStateFlow<TransactionDetail?>(null)
+    val detailState: StateFlow<TransactionDetail?> = _detailState.asStateFlow()
+
     fun addTransaction(
         type: TransactionType,
         amount: Double,
@@ -213,6 +216,20 @@ class MisGastosViewModel(
         viewModelScope.launch { repository.deleteTransaction(transaction) }
     }
 
+    fun loadDetail(transactionId: Long) {
+        viewModelScope.launch {
+            val tx = repository.getTransaction(transactionId)
+            _detailState.value = tx?.let {
+                val items = repository.getLineItemsForTransaction(it.id)
+                TransactionDetail(transaction = it, lineItems = items)
+            }
+        }
+    }
+
+    fun clearDetail() {
+        _detailState.value = null
+    }
+
     fun saveBudget(category: String, monthlyLimit: Double) {
         viewModelScope.launch {
             val existing = repository.getBudgetForCategory(category)
@@ -287,6 +304,11 @@ data class EditableLineItem(
     val name: String = "",
     val price: Double = 0.0,
     val quantity: Double = 1.0,
+)
+
+data class TransactionDetail(
+    val transaction: Transaction,
+    val lineItems: List<LineItem> = emptyList(),
 )
 
 data class EditableReceipt(

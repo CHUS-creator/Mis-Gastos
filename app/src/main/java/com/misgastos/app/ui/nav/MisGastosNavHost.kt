@@ -17,12 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.misgastos.app.ui.screens.budget.BudgetScreen
 import com.misgastos.app.ui.screens.dashboard.DashboardScreen
+import com.misgastos.app.ui.screens.detail.TransactionDetailScreen
 import com.misgastos.app.ui.screens.expenses.ExpensesScreen
 import com.misgastos.app.ui.screens.income.IncomeScreen
 import com.misgastos.app.ui.screens.scan.ReviewReceiptScreen
@@ -100,10 +103,21 @@ fun MisGastosNavHost() {
                 DashboardScreen(
                     viewModel = viewModel,
                     onScanClick = { navController.navigate(Screen.ScanEntry.route) },
+                    onTransactionClick = { id -> navController.navigate("detail/$id") },
                 )
             }
-            composable(Screen.Expenses.route) { ExpensesScreen(viewModel) }
-            composable(Screen.Income.route) { IncomeScreen(viewModel) }
+            composable(Screen.Expenses.route) {
+                ExpensesScreen(
+                    viewModel = viewModel,
+                    onTransactionClick = { id -> navController.navigate("detail/$id") },
+                )
+            }
+            composable(Screen.Income.route) {
+                IncomeScreen(
+                    viewModel = viewModel,
+                    onTransactionClick = { id -> navController.navigate("detail/$id") },
+                )
+            }
             composable(Screen.Budget.route) { BudgetScreen(viewModel) }
             composable(Screen.Stats.route) { StatsScreen(viewModel) }
             composable(Screen.ScanEntry.route) {
@@ -126,6 +140,24 @@ fun MisGastosNavHost() {
                         navController.popBackStack(Screen.Dashboard.route, inclusive = false)
                     },
                     onBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = Screen.Detail.route,
+                arguments = listOf(navArgument("transactionId") { type = NavType.LongType }),
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getLong("transactionId") ?: -1L
+                TransactionDetailScreen(
+                    viewModel = viewModel,
+                    transactionId = id,
+                    onBack = {
+                        viewModel.clearDetail()
+                        navController.popBackStack()
+                    },
+                    onDeleted = {
+                        viewModel.clearDetail()
+                        navController.popBackStack()
+                    },
                 )
             }
         }

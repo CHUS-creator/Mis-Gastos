@@ -81,6 +81,19 @@
     <string name="field_line_price">Price</string>
     <string name="field_line_qty">Qty</string>
 
+    <string name="detail_title">Detail</string>
+    <string name="detail_merchant">Merchant</string>
+    <string name="detail_date">Date</string>
+    <string name="detail_category">Category</string>
+    <string name="detail_amount">Amount</string>
+    <string name="detail_description">Description</string>
+    <string name="detail_source">Source</string>
+    <string name="detail_source_manual">Manual</string>
+    <string name="detail_source_scan">Scanned receipt</string>
+    <string name="detail_line_items">Receipt lines</string>
+    <string name="detail_no_lines">This transaction has no line items.</string>
+    <string name="detail_empty">Transaction not found.</string>
+
     <string name="cat_food">Food</string>
     <string name="cat_transport">Transport</string>
     <string name="cat_housing">Housing</string>
