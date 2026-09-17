@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 class MisGastosRepository(
     private val transactionDao: TransactionDao,
-    private val budgetDao: BudgetDao
+    private val budgetDao: BudgetDao,
 ) {
     fun getAllTransactions(): Flow<List<Transaction>> = transactionDao.getAll()
 
@@ -21,6 +21,7 @@ class MisGastosRepository(
     fun getIncomes(): Flow<List<Transaction>> =
         transactionDao.getByType(TransactionType.INCOME)
 
+    @Suppress("unused")
     fun getTransactionsByMonth(timestamp: Long): Flow<List<Transaction>> {
         val range = DateUtils.monthRange(timestamp)
         return transactionDao.getByDateRange(range.first, range.last)
@@ -57,6 +58,7 @@ class MisGastosRepository(
     suspend fun addTransaction(transaction: Transaction): Long =
         transactionDao.insert(transaction)
 
+    @Suppress("unused")
     suspend fun updateTransaction(transaction: Transaction) =
         transactionDao.update(transaction)
 

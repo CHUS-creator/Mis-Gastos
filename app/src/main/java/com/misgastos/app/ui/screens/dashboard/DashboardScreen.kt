@@ -52,7 +52,7 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 fun DashboardScreen(viewModel: MisGastosViewModel) {
     val dashboard by viewModel.dashboard.collectAsState()
     val recent by viewModel.recentTransactions.collectAsState()
-    var showAdd by remember { mutableStateOf(false) }
+    var showAdd by remember { mutableStateOf(value = false) }
     var addType by remember { mutableStateOf(TransactionType.EXPENSE) }
 
     Scaffold(
@@ -64,54 +64,54 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
                     showAdd = true
                 },
                 icon = { Icon(Icons.Filled.Add, contentDescription = "Añadir") },
-                text = { Text("Añadir") }
+                text = { Text("Añadir") },
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = dashboard.monthLabel,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             BalanceCard(dashboard.totalBalance)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SummaryCard(
                     title = "Ingresos del mes",
                     value = dashboard.monthIncome,
                     color = Green,
                     icon = Icons.Filled.ArrowUpward,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 SummaryCard(
                     title = "Gastos del mes",
                     value = dashboard.monthExpenses,
                     color = Red,
                     icon = Icons.Filled.ArrowDownward,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
             Text(
                 text = "Balance del mes: ${formatMoney(dashboard.monthBalance)}",
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = "Movimientos recientes",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
             RecentTransactionsList(
                 transactions = recent,
-                onDelete = viewModel::deleteTransaction
+                onDelete = viewModel::deleteTransaction,
             )
         }
     }
@@ -119,13 +119,21 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
     if (showAdd) {
         AddTransactionDialog(
             type = addType,
-            categories = if (addType == TransactionType.EXPENSE)
-                Categories.expenseCategories else Categories.incomeCategories,
+            categories = if (addType == TransactionType.EXPENSE) {
+                Categories.expenseCategories
+            } else {
+                Categories.incomeCategories
+            },
             onDismiss = { showAdd = false },
-            onConfirm = { amount, category, description ->
-                viewModel.addTransaction(addType, amount, category, description, System.currentTimeMillis())
-            }
-        )
+        ) { amount, category, description ->
+            viewModel.addTransaction(
+                addType,
+                amount,
+                category,
+                description,
+                System.currentTimeMillis(),
+            )
+        }
     }
 }
 
@@ -133,25 +141,25 @@ fun DashboardScreen(viewModel: MisGastosViewModel) {
 private fun BalanceCard(balance: Double) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "Balance total",
                 color = Color.White,
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = formatMoney(balance),
                 color = Color.White,
                 fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -163,30 +171,30 @@ private fun SummaryCard(
     value: Double,
     color: Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .padding(0.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             Text(text = title, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -194,7 +202,7 @@ private fun SummaryCard(
                 text = formatMoney(value),
                 fontWeight = FontWeight.Bold,
                 color = color,
-                fontSize = 16.sp
+                fontSize = 16.sp,
             )
         }
     }
@@ -203,19 +211,19 @@ private fun SummaryCard(
 @Composable
 private fun RecentTransactionsList(
     transactions: List<Transaction>,
-    onDelete: (Transaction) -> Unit
+    onDelete: (Transaction) -> Unit,
 ) {
     if (transactions.isEmpty()) {
         Text(
             text = "Aún no hay movimientos. Pulsa \"Añadir\" para registrar el primero.",
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(vertical = 16.dp)
+            modifier = Modifier.padding(vertical = 16.dp),
         )
         return
     }
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(transactions.take(20)) { transaction ->
             TransactionRow(transaction = transaction, onDelete = onDelete)

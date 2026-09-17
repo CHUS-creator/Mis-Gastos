@@ -23,7 +23,7 @@ class Converters {
 @Database(
     entities = [Transaction::class, Budget::class],
     version = 1,
-    exportSchema = false
+    exportSchema = false,
 )
 @TypeConverters(Converters::class)
 abstract class MisGastosDatabase : RoomDatabase() {
@@ -39,7 +39,7 @@ abstract class MisGastosDatabase : RoomDatabase() {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     MisGastosDatabase::class.java,
-                    "misgastos.db"
+                    "misgastos.db",
                 ).fallbackToDestructiveMigration().build().also {
                     INSTANCE = it
                 }

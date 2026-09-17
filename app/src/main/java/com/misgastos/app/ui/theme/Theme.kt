@@ -15,13 +15,13 @@ private val LightColorScheme = lightColorScheme(
     surface = Surface,
     onSurface = OnSurface,
     error = Red,
-    onError = Surface
+    onError = Surface,
 )
 
 @Composable
 fun MisGastosTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColorScheme,
-        content = content
+        content = content,
     )
 }

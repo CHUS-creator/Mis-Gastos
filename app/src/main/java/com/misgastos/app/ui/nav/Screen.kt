@@ -20,5 +20,5 @@ val screens = listOf(
     Screen.Expenses,
     Screen.Income,
     Screen.Budget,
-    Screen.Stats
+    Screen.Stats,
 )

@@ -60,17 +60,17 @@ fun MisGastosNavHost() {
                             }
                         },
                         icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = { Text(screen.label) }
+                        label = { Text(screen.label) },
                     )
                 }
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         ) {
             composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
             composable(Screen.Expenses.route) { ExpensesScreen(viewModel) }

@@ -6,8 +6,8 @@ import java.util.Date
 import java.util.Locale
 
 object DateUtils {
-    private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    private val monthFmt = SimpleDateFormat("MMMM yyyy", Locale.getDefault("es", "ES"))
+    private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
+    private val monthFmt = SimpleDateFormat("MMMM yyyy", Locale("es", "ES"))
 
     fun formatDate(timestamp: Long): String = dateFmt.format(Date(timestamp))
 
@@ -29,5 +29,6 @@ object DateUtils {
         return start..cal.timeInMillis
     }
 
+    @Suppress("unused")
     fun currentMonthRange(): LongRange = monthRange(System.currentTimeMillis())
 }

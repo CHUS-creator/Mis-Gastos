@@ -27,7 +27,7 @@ import com.misgastos.app.util.DateUtils
 @Composable
 fun TransactionRow(
     transaction: Transaction,
-    onDelete: (Transaction) -> Unit = {}
+    onDelete: (Transaction) -> Unit = {},
 ) {
     val isIncome = transaction.type == TransactionType.INCOME
     val color = if (isIncome) Green else Red
@@ -35,44 +35,44 @@ fun TransactionRow(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.category,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 if (transaction.description.isNotBlank()) {
                     Text(
                         text = transaction.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(
                     text = DateUtils.formatDate(transaction.date),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
                 text = "$sign${formatMoney(transaction.amount)}",
                 color = color,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 8.dp),
             )
             IconButton(onClick = { onDelete(transaction) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Eliminar",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

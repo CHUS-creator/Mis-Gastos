@@ -2,11 +2,13 @@ package com.misgastos.app.ui.screens.budget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.misgastos.app.ui.components.CategoryDropdown
 import com.misgastos.app.ui.components.formatMoney
@@ -44,7 +47,7 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 @Composable
 fun BudgetScreen(viewModel: MisGastosViewModel) {
     val statuses by viewModel.budgetStatus.collectAsState()
-    var showAdd by remember { mutableStateOf(false) }
+    var showAdd by remember { mutableStateOf(value = false) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Presupuestos") }) },
@@ -52,37 +55,36 @@ fun BudgetScreen(viewModel: MisGastosViewModel) {
             ExtendedFloatingActionButton(
                 onClick = { showAdd = true },
                 icon = { Icon(Icons.Filled.Add, contentDescription = "Nuevo presupuesto") },
-                text = { Text("Nuevo") }
+                text = { Text("Nuevo") },
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = "Límites mensuales por categoría",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (statuses.isEmpty()) {
                 Text(
                     text = "No hay presupuestos definidos. Crea uno con el botón \"Nuevo\".",
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(statuses) { status ->
-                        BudgetCard(
-                            status = status,
-                            onDelete = { viewModel.deleteBudget(status.budget) }
-                        )
+                        BudgetCard(status = status) {
+                            viewModel.deleteBudget(status.budget)
+                        }
                     }
                 }
             }
@@ -90,19 +92,16 @@ fun BudgetScreen(viewModel: MisGastosViewModel) {
     }
 
     if (showAdd) {
-        AddBudgetDialog(
-            onDismiss = { showAdd = false },
-            onConfirm = { category, limit ->
-                viewModel.saveBudget(category, limit)
-            }
-        )
+        AddBudgetDialog(onDismiss = { showAdd = false }) { category, limit ->
+            viewModel.saveBudget(category, limit)
+        }
     }
 }
 
 @Composable
 private fun BudgetCard(
     status: BudgetStatus,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     val color = when {
         status.overLimit -> Red
@@ -111,44 +110,44 @@ private fun BudgetCard(
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            androidx.compose.foundation.layout.Row(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = status.budget.category,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 TextButton(onClick = onDelete) { Text("Eliminar") }
             }
             Text(
                 text = "${formatMoney(status.spent)} de ${formatMoney(status.budget.monthlyLimit)}",
-                color = color
+                color = color,
             )
             LinearProgressIndicator(
                 progress = { status.progress.coerceIn(0f, 1f) },
                 color = color,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             if (status.overLimit) {
                 Text(
                     text = "Has superado el presupuesto",
                     color = Red,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
             } else {
                 Text(
                     text = "Restante: ${formatMoney(status.remaining)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -158,11 +157,11 @@ private fun BudgetCard(
 @Composable
 private fun AddBudgetDialog(
     onDismiss: () -> Unit,
-    onConfirm: (category: String, limit: Double) -> Unit
+    onConfirm: (category: String, limit: Double) -> Unit,
 ) {
     var category by remember { mutableStateOf(Categories.expenseCategories.first()) }
     var limitText by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf(value = false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -174,37 +173,39 @@ private fun AddBudgetDialog(
                     options = Categories.expenseCategories,
                     onSelectedChange = { category = it },
                     label = "Categoría",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = limitText,
                     onValueChange = {
-                        limitText = it.filter { c -> c.isDigit() || c == '.' || c == ',' }
+                        limitText = it.filter { c -> c.isDigit() || (c == '.') || (c == ',') }
                         error = false
                     },
                     label = { Text("Límite mensual") },
                     isError = error,
                     singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                val limit = limitText.replace(',', '.').toDoubleOrNull()
-                if (limit == null || limit <= 0.0) {
-                    error = true
-                } else {
-                    onConfirm(category, limit)
-                    onDismiss()
-                }
-            }) { Text("Guardar") }
+            TextButton(
+                onClick = {
+                    val limit = limitText.replace(',', '.').toDoubleOrNull()
+                    if ((limit == null) || (limit <= 0.0)) {
+                        error = true
+                    } else {
+                        onConfirm(category, limit)
+                        onDismiss()
+                    }
+                },
+            ) { Text("Guardar") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
+        },
     )
 }

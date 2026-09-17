@@ -9,7 +9,7 @@ object Categories {
         "Salud",
         "Ropa",
         "Suscripciones",
-        "Otros"
+        "Otros",
     )
 
     val incomeCategories = listOf(
@@ -17,6 +17,6 @@ object Categories {
         "Freelance",
         "Inversiones",
         "Regalo",
-        "Otros"
+        "Otros",
     )
 }

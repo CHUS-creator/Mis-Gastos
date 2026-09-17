@@ -8,5 +8,6 @@ fun formatMoney(value: Double): String {
     return fmt.format(value)
 }
 
+@Suppress("unused")
 fun formatSigned(value: Double): String =
-    (if (value >= 0 "+" else "") + formatMoney(value)
+    (if (value >= 0) "+" else "") + formatMoney(value)

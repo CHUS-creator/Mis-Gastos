@@ -38,7 +38,7 @@ import com.misgastos.app.viewmodel.MisGastosViewModel
 fun IncomeScreen(viewModel: MisGastosViewModel) {
     val incomes by viewModel.incomes.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
-    var showAdd by remember { mutableStateOf(false) }
+    var showAdd by remember { mutableStateOf(value = false) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Ingresos") }) },
@@ -46,42 +46,42 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
             ExtendedFloatingActionButton(
                 onClick = { showAdd = true },
                 icon = { Icon(Icons.Filled.Add, contentDescription = "Añadir ingreso") },
-                text = { Text("Ingreso") }
+                text = { Text("Ingreso") },
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = "Total ingresado este mes",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = formatMoney(dashboard.monthIncome),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Green
+                color = Green,
             )
             if (incomes.isEmpty()) {
                 Text(
                     text = "No hay ingresos registrados todavía.",
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(incomes) { income ->
                         TransactionRow(
                             transaction = income,
-                            onDelete = viewModel::deleteTransaction
+                            onDelete = viewModel::deleteTransaction,
                         )
                     }
                 }
@@ -94,15 +94,14 @@ fun IncomeScreen(viewModel: MisGastosViewModel) {
             type = TransactionType.INCOME,
             categories = Categories.incomeCategories,
             onDismiss = { showAdd = false },
-            onConfirm = { amount, category, description ->
-                viewModel.addTransaction(
-                    TransactionType.INCOME,
-                    amount,
-                    category,
-                    description,
-                    System.currentTimeMillis()
-                )
-            }
-        )
+        ) { amount, category, description ->
+            viewModel.addTransaction(
+                TransactionType.INCOME,
+                amount,
+                category,
+                description,
+                System.currentTimeMillis(),
+            )
+        }
     }
 }

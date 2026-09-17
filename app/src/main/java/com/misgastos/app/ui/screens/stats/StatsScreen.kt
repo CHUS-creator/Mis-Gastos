@@ -35,41 +35,41 @@ fun StatsScreen(viewModel: MisGastosViewModel) {
     val dashboard by viewModel.dashboard.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Estadísticas") }) }
+        topBar = { TopAppBar(title = { Text("Estadísticas") }) },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = "Gastos por categoría - ${dashboard.monthLabel}",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
             Text(
                 text = "Total: ${formatMoney(dashboard.monthExpenses)}",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
             )
             if (categories.isEmpty()) {
                 Text(
                     text = "No hay datos suficientes para este mes.",
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
                 val maxTotal = categories.maxOf { it.total }.coerceAtLeast(0.0)
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(categories) { item ->
                         CategoryBar(
                             category = item.category,
                             total = item.total,
-                            fraction = if (maxTotal > 0) (item.total / maxTotal).toFloat() else 0f
+                            fraction = if (maxTotal > 0) (item.total / maxTotal).toFloat() else 0f,
                         )
                     }
                 }
@@ -82,22 +82,22 @@ fun StatsScreen(viewModel: MisGastosViewModel) {
 private fun CategoryBar(
     category: String,
     total: Double,
-    fraction: Float
+    fraction: Float,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(text = category, fontWeight = FontWeight.Medium)
                 Text(text = formatMoney(total), fontWeight = FontWeight.Bold)
@@ -106,13 +106,13 @@ private fun CategoryBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(12.dp)
-                    .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small),
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(fraction)
                         .height(12.dp)
-                        .background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small),
                 )
             }
         }

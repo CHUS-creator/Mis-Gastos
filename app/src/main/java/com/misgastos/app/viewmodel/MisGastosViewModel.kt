@@ -9,6 +9,7 @@ import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.util.DateUtils
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,7 @@ data class DashboardState(
     val monthIncome: Double = 0.0,
     val monthExpenses: Double = 0.0,
     val monthBalance: Double = 0.0,
-    val monthLabel: String = DateUtils.formatMonth(System.currentTimeMillis())
+    val monthLabel: String = DateUtils.formatMonth(System.currentTimeMillis()),
 )
 
 data class BudgetStatus(
@@ -31,7 +32,7 @@ data class BudgetStatus(
     val spent: Double,
     val remaining: Double,
     val progress: Float,
-    val overLimit: Boolean
+    val overLimit: Boolean,
 )
 
 class MisGastosViewModel(private val repository: MisGastosRepository) : ViewModel() {
@@ -42,40 +43,40 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
         repository.totalBalance(),
         repository.monthIncomes(now),
         repository.monthExpenses(now),
-        repository.monthBalance(now)
+        repository.monthBalance(now),
     ) { total, inc, exp, balance ->
         DashboardState(
             totalBalance = total,
             monthIncome = inc,
             monthExpenses = exp,
             monthBalance = balance,
-            monthLabel = DateUtils.formatMonth(now)
+            monthLabel = DateUtils.formatMonth(now),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardState())
 
     val recentTransactions: StateFlow<List<Transaction>> =
         repository.getAllTransactions().stateIn(
-            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
     val expenses: StateFlow<List<Transaction>> =
         repository.getExpenses().stateIn(
-            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
     val incomes: StateFlow<List<Transaction>> =
         repository.getIncomes().stateIn(
-            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
     val budgets: StateFlow<List<Budget>> =
         repository.getAllBudgets().stateIn(
-            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
     val monthExpensesByCategory: StateFlow<List<CategoryTotal>> =
         repository.monthExpensesByCategory(now).stateIn(
-            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
     val budgetStatus: StateFlow<List<BudgetStatus>> =
@@ -91,7 +92,7 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
                     spent = spent,
                     remaining = remaining,
                     progress = progress,
-                    overLimit = spent > budget.monthlyLimit
+                    overLimit = spent > budget.monthlyLimit,
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -104,7 +105,7 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
         amount: Double,
         category: String,
         description: String,
-        date: Long
+        date: Long,
     ) {
         viewModelScope.launch {
             repository.addTransaction(
@@ -113,8 +114,8 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
                     amount = amount,
                     category = category,
                     description = description,
-                    date = date
-                )
+                    date = date,
+                ),
             )
             checkBudgetAlerts(category)
         }
@@ -131,8 +132,8 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
                 Budget(
                     id = existing?.id ?: 0,
                     category = category,
-                    monthlyLimit = monthlyLimit
-                )
+                    monthlyLimit = monthlyLimit,
+                ),
             )
         }
     }
@@ -149,12 +150,12 @@ class MisGastosViewModel(private val repository: MisGastosRepository) : ViewMode
         val budget = repository.getBudgetForCategory(category) ?: return
         val totals = repository.monthExpensesByCategory(System.currentTimeMillis()).first()
         val spent = totals.firstOrNull { it.category == category }?.total ?: 0.0
+        val spentFormatted = String.format(Locale.getDefault(), "%.2f", spent)
+        val limitFormatted = String.format(Locale.getDefault(), "%.2f", budget.monthlyLimit)
         if (spent > budget.monthlyLimit) {
-            _snackbar.value = "Has superado el presupuesto de $category " +
-                "(${String.format("%.2f", spent)} / ${String.format("%.2f", budget.monthlyLimit)})"
-        } else if (budget.monthlyLimit > 0 && spent >= budget.monthlyLimit * 0.8) {
-            _snackbar.value = "Estás cerca del límite en $category " +
-                "(${String.format("%.2f", spent)} / ${String.format("%.2f", budget.monthlyLimit)})"
+            _snackbar.value = "Has superado el presupuesto de $category ($spentFormatted / $limitFormatted)"
+        } else if ((budget.monthlyLimit > 0) && (spent >= (budget.monthlyLimit * 0.8))) {
+            _snackbar.value = "Estás cerca del límite en $category ($spentFormatted / $limitFormatted)"
         }
     }
 
