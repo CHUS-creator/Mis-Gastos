@@ -3,9 +3,11 @@ package com.misgastos.app.data.repository
 import com.misgastos.app.data.dao.BudgetDao
 import com.misgastos.app.data.dao.CategoryTotal
 import com.misgastos.app.data.dao.LineItemDao
+import com.misgastos.app.data.dao.MerchantHintDao
 import com.misgastos.app.data.dao.TransactionDao
 import com.misgastos.app.data.entity.Budget
 import com.misgastos.app.data.entity.LineItem
+import com.misgastos.app.data.entity.MerchantHint
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.util.DateUtils
@@ -15,6 +17,7 @@ class MisGastosRepository(
     private val transactionDao: TransactionDao,
     private val budgetDao: BudgetDao,
     private val lineItemDao: LineItemDao,
+    private val merchantHintDao: MerchantHintDao,
 ) {
     fun getAllTransactions(): Flow<List<Transaction>> = transactionDao.getAll()
 
@@ -71,6 +74,13 @@ class MisGastosRepository(
 
     suspend fun getLineItemsForTransaction(transactionId: Long): List<LineItem> =
         lineItemDao.getForTransactionOnce(transactionId)
+
+    suspend fun getMerchantHint(merchant: String): MerchantHint? =
+        merchantHintDao.get(merchant)
+
+    suspend fun saveMerchantHint(merchant: String, category: String) {
+        merchantHintDao.upsert(MerchantHint(merchant = merchant, category = category))
+    }
 
     @Suppress("unused")
     suspend fun updateTransaction(transaction: Transaction) =

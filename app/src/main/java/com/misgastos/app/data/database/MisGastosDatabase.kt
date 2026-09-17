@@ -10,10 +10,12 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.misgastos.app.data.dao.BudgetDao
 import com.misgastos.app.data.dao.LineItemDao
+import com.misgastos.app.data.dao.MerchantHintDao
 import com.misgastos.app.data.dao.TransactionDao
 import com.misgastos.app.data.entity.Budget
 import com.misgastos.app.data.entity.EntrySource
 import com.misgastos.app.data.entity.LineItem
+import com.misgastos.app.data.entity.MerchantHint
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
 
@@ -51,9 +53,22 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS merchant_hints (
+                merchant TEXT NOT NULL PRIMARY KEY,
+                category TEXT NOT NULL
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 @Database(
-    entities = [Transaction::class, Budget::class, LineItem::class],
-    version = 2,
+    entities = [Transaction::class, Budget::class, LineItem::class, MerchantHint::class],
+    version = 3,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -61,6 +76,7 @@ abstract class MisGastosDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun budgetDao(): BudgetDao
     abstract fun lineItemDao(): LineItemDao
+    abstract fun merchantHintDao(): MerchantHintDao
 
     companion object {
         @Volatile
@@ -73,7 +89,7 @@ abstract class MisGastosDatabase : RoomDatabase() {
                     MisGastosDatabase::class.java,
                     "misgastos.db",
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build().also {
                         INSTANCE = it
                     }

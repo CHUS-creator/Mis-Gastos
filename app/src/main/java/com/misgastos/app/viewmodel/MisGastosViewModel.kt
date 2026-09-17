@@ -13,6 +13,7 @@ import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
+import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
 import com.misgastos.app.ocr.ReceiptParser
@@ -148,11 +149,20 @@ class MisGastosViewModel(
             runCatching { ocrRecognizer.recognize(context, uri) }
                 .onSuccess { text ->
                     val parsed = ReceiptParser.parse(text)
-                    _pendingReceipt.value = EditableReceipt.fromParsed(uri, parsed)
+                    val receipt = EditableReceipt.fromParsed(uri, parsed)
+                    val hinted = applyMerchantHint(receipt)
+                    _pendingReceipt.value = hinted
                     _scanState.value = ScanState.Done(uri)
                 }
                 .onFailure { _scanState.value = ScanState.Error }
         }
+    }
+
+    private suspend fun applyMerchantHint(receipt: EditableReceipt): EditableReceipt {
+        val merchant = receipt.merchant.trim().takeIf { it.isNotBlank() } ?: return receipt
+        val hint = repository.getMerchantHint(merchant) ?: return receipt
+        val key = CategoryKey.fromValue(hint.category) ?: return receipt
+        return receipt.copy(suggestedCategory = key)
     }
 
     fun consumeScanState() {
@@ -183,6 +193,8 @@ class MisGastosViewModel(
                 .filter { it.name.isNotBlank() && it.price > 0.0 }
                 .map { LineItem(name = it.name, price = it.price, quantity = it.quantity) }
             repository.addTransactionWithItems(transaction, items)
+            val merchant = receipt.merchant.trim().takeIf { it.isNotBlank() }
+            if (merchant != null) repository.saveMerchantHint(merchant, category)
             _pendingReceipt.value = null
             checkBudgetAlerts(category)
         }
@@ -251,6 +263,7 @@ class MisGastosViewModel(
                     db.transactionDao(),
                     db.budgetDao(),
                     db.lineItemDao(),
+                    db.merchantHintDao(),
                 )
                 return MisGastosViewModel(app, repo) as T
             }
@@ -280,6 +293,7 @@ data class EditableReceipt(
     val description: String = "",
     val lineItems: List<EditableLineItem> = emptyList(),
     val rawText: String = "",
+    val suggestedCategory: CategoryKey? = null,
 ) {
     companion object {
         fun fromParsed(uri: Uri, parsed: ParsedReceipt): EditableReceipt =
@@ -298,6 +312,7 @@ data class EditableReceipt(
                     )
                 },
                 rawText = parsed.rawText,
+                suggestedCategory = null,
             )
     }
 }

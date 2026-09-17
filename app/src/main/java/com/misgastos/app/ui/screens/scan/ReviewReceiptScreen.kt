@@ -53,7 +53,9 @@ fun ReviewReceiptScreen(
 ) {
     val receiptState by viewModel.pendingReceipt.collectAsState()
     val receipt = receiptState ?: run { onBack(); return }
-    var category by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(Categories.expenseCategories.first()) }
+    var category by androidx.compose.runtime.remember(receipt.suggestedCategory) {
+        androidx.compose.runtime.mutableStateOf(receipt.suggestedCategory ?: Categories.expenseCategories.first())
+    }
 
     Scaffold(
         topBar = {
