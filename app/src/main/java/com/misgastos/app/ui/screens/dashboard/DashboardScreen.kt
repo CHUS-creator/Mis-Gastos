@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -23,6 +24,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,10 +38,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.misgastos.app.R
 import com.misgastos.app.data.entity.Transaction
 import com.misgastos.app.data.entity.TransactionType
@@ -62,8 +68,53 @@ fun DashboardScreen(
     val recent by viewModel.recentTransactions.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
     var addType by remember { mutableStateOf(TransactionType.EXPENSE) }
+    var exportMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val csvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.exportToUri(uri, MisGastosViewModel.ExportFormat.CSV) { ok ->
+            viewModel.showExportResult(context, ok, uri, MisGastosViewModel.ExportFormat.CSV)
+        }
+    }
+    val jsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.exportToUri(uri, MisGastosViewModel.ExportFormat.JSON) { ok ->
+            viewModel.showExportResult(context, ok, uri, MisGastosViewModel.ExportFormat.JSON)
+        }
+    }
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.dashboard_title)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.dashboard_title)) },
+                actions = {
+                    IconButton(onClick = { exportMenu = true }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_export))
+                    }
+                    DropdownMenu(
+                        expanded = exportMenu,
+                        onDismissRequest = { exportMenu = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_export_csv)) },
+                            onClick = {
+                                exportMenu = false
+                                csvLauncher.launch("misgastos.csv")
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_export_json)) },
+                            onClick = {
+                                exportMenu = false
+                                jsonLauncher.launch("misgastos.json")
+                            },
+                        )
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             var menuExpanded by remember { mutableStateOf(false) }
             Column(horizontalAlignment = Alignment.End) {

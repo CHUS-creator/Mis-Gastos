@@ -29,10 +29,13 @@ import androidx.compose.ui.unit.dp
 import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.ui.components.AddTransactionDialog
+import com.misgastos.app.ui.components.SearchFilterBar
 import com.misgastos.app.ui.components.TransactionRow
 import com.misgastos.app.ui.components.formatMoney
 import com.misgastos.app.ui.theme.Green
 import com.misgastos.app.util.Categories
+import com.misgastos.app.util.CategoryKey
+import com.misgastos.app.util.categoryLabel
 import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +47,18 @@ fun IncomeScreen(
     val incomes by viewModel.incomes.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
+    var query by remember { mutableStateOf("") }
+    var categoryFilter by remember { mutableStateOf<CategoryKey?>(null) }
+    val filtered = remember(incomes, query, categoryFilter) {
+        incomes.filter { tx ->
+            val matchesQuery = query.isBlank() ||
+                tx.merchant.contains(query, ignoreCase = true) ||
+                tx.description.contains(query, ignoreCase = true) ||
+                categoryLabel(tx.category).contains(query, ignoreCase = true)
+            val matchesCategory = categoryFilter == null || tx.category == categoryFilter?.stableValue
+            matchesQuery && matchesCategory
+        }
+    }
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.income_title)) }) },
         floatingActionButton = {
@@ -72,9 +87,16 @@ fun IncomeScreen(
                 fontWeight = FontWeight.Bold,
                 color = Green,
             )
-            if (incomes.isEmpty()) {
+            SearchFilterBar(
+                query = query,
+                onQueryChange = { query = it },
+                selectedCategory = categoryFilter,
+                onCategoryChange = { categoryFilter = it },
+                categories = Categories.incomeCategories,
+            )
+            if (filtered.isEmpty()) {
                 Text(
-                    text = stringResource(R.string.income_empty),
+                    text = stringResource(R.string.search_no_results),
                     modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
@@ -82,7 +104,7 @@ fun IncomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(incomes) { income ->
+                    items(filtered) { income ->
                         TransactionRow(
                             transaction = income,
                             onDelete = viewModel::deleteTransaction,

@@ -11,6 +11,9 @@ object DateUtils {
 
     fun formatDate(timestamp: Long): String = dateFmt.format(Date(timestamp))
 
+    fun parseDate(text: String): Long? =
+        runCatching { dateFmt.parse(text.trim())?.time }.getOrNull()
+
     fun formatMonth(timestamp: Long): String =
         monthFmt.format(Date(timestamp)).replaceFirstChar { it.uppercase() }
 

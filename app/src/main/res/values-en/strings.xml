@@ -15,6 +15,14 @@
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_export">Export</string>
+    <string name="action_export_csv">Export CSV</string>
+    <string name="action_export_json">Export JSON</string>
+    <string name="action_search">Search</string>
+    <string name="action_clear_filters">Clear filters</string>
+    <string name="action_filter_by_category">Filter by category</string>
+    <string name="action_all_categories">All categories</string>
 
     <string name="field_amount">Amount</string>
     <string name="field_category">Category</string>
@@ -52,6 +60,8 @@
     <string name="stats_by_category">Expenses by category - %1$s</string>
     <string name="stats_total">Total: %1$s</string>
     <string name="stats_empty">Not enough data for this month.</string>
+    <string name="stats_pie_title">Distribution by category</string>
+    <string name="stats_legend">Legend</string>
 
     <string name="snackbar_budget_exceeded">You have exceeded the budget for %1$s (%2$s / %3$s)</string>
     <string name="snackbar_budget_near_limit">You are close to the limit on %1$s (%2$s / %3$s)</string>
@@ -93,6 +103,31 @@
     <string name="detail_line_items">Receipt lines</string>
     <string name="detail_no_lines">This transaction has no line items.</string>
     <string name="detail_empty">Transaction not found.</string>
+    <string name="detail_edit_title">Edit transaction</string>
+    <string name="detail_edit_amount">Amount</string>
+    <string name="detail_edit_merchant">Merchant</string>
+    <string name="detail_edit_description">Description</string>
+    <string name="detail_edit_date">Date (dd/MM/yyyy)</string>
+    <string name="detail_invalid_amount">Enter a valid amount.</string>
+    <string name="detail_invalid_date">Invalid date format. Use dd/MM/yyyy.</string>
+
+    <string name="search_hint">Search by merchant or description…</string>
+    <string name="search_no_results">No results found.</string>
+    <string name="filter_category_all">All</string>
+
+    <string name="export_title">Export data</string>
+    <string name="export_snackbar_csv">CSV exported: %1$s</string>
+    <string name="export_snackbar_json">JSON exported: %1$s</string>
+    <string name="export_error">Could not export the file.</string>
+    <string name="export_no_data">No transactions to export.</string>
+    <string name="export_share_title">Share MyExpenses</string>
+    <string name="export_column_date">Date</string>
+    <string name="export_column_type">Type</string>
+    <string name="export_column_amount">Amount</string>
+    <string name="export_column_category">Category</string>
+    <string name="export_column_description">Description</string>
+    <string name="export_column_merchant">Merchant</string>
+    <string name="export_column_source">Source</string>
 
     <string name="cat_food">Food</string>
     <string name="cat_transport">Transport</string>

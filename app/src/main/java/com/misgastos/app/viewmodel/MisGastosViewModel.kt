@@ -15,6 +15,7 @@ import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
 import com.misgastos.app.ocr.ReceiptTemplate
 import com.misgastos.app.util.CategoryKey
+import com.misgastos.app.util.DataExporter
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
 import com.misgastos.app.ocr.ReceiptParser
@@ -232,6 +233,18 @@ class MisGastosViewModel(
         viewModelScope.launch { repository.deleteTransaction(transaction) }
     }
 
+    fun updateTransaction(transaction: Transaction, onDone: () -> Unit) {
+        viewModelScope.launch {
+            repository.updateTransaction(transaction)
+            _detailState.value = TransactionDetail(
+                transaction = transaction,
+                lineItems = _detailState.value?.lineItems.orEmpty(),
+            )
+            checkBudgetAlerts(transaction.category)
+            onDone()
+        }
+    }
+
     fun loadDetail(transactionId: Long) {
         viewModelScope.launch {
             val tx = repository.getTransaction(transactionId)
@@ -263,8 +276,38 @@ class MisGastosViewModel(
         viewModelScope.launch { repository.deleteBudget(budget) }
     }
 
+    fun exportToUri(uri: Uri, format: ExportFormat, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val transactions = repository.getAllTransactionsOnce()
+            val ok = when (format) {
+                ExportFormat.CSV -> DataExporter.exportCsv(context, uri, transactions)
+                ExportFormat.JSON -> DataExporter.exportJson(context, uri, transactions)
+            }
+            onResult(ok)
+        }
+    }
+
+    enum class ExportFormat { CSV, JSON }
+
     fun consumeSnackbar() {
         _snackbar.value = null
+    }
+
+    fun showExportResult(
+        context: Context,
+        ok: Boolean,
+        uri: android.net.Uri,
+        format: ExportFormat,
+    ) {
+        if (!ok) {
+            _snackbar.value = context.getString(R.string.export_error)
+            return
+        }
+        val name = uri.lastPathSegment ?: uri.toString()
+        _snackbar.value = when (format) {
+            ExportFormat.CSV -> context.getString(R.string.export_snackbar_csv, name)
+            ExportFormat.JSON -> context.getString(R.string.export_snackbar_json, name)
+        }
     }
 
     private suspend fun checkBudgetAlerts(category: String) {

@@ -55,4 +55,6 @@ object Categories {
         CategoryKey.GIFT,
         CategoryKey.OTHER_INCOME,
     )
+
+    val allCategories: List<CategoryKey> = expenseCategories + incomeCategories
 }

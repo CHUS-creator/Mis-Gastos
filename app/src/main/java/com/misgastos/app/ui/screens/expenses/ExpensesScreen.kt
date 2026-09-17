@@ -29,9 +29,12 @@ import androidx.compose.ui.unit.dp
 import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.ui.components.AddTransactionDialog
+import com.misgastos.app.ui.components.SearchFilterBar
 import com.misgastos.app.ui.components.TransactionRow
 import com.misgastos.app.ui.components.formatMoney
 import com.misgastos.app.util.Categories
+import com.misgastos.app.util.CategoryKey
+import com.misgastos.app.util.categoryLabel
 import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +46,18 @@ fun ExpensesScreen(
     val expenses by viewModel.expenses.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
     var showAdd by remember { mutableStateOf(value = false) }
+    var query by remember { mutableStateOf("") }
+    var categoryFilter by remember { mutableStateOf<CategoryKey?>(null) }
+    val filtered = remember(expenses, query, categoryFilter) {
+        expenses.filter { tx ->
+            val matchesQuery = query.isBlank() ||
+                tx.merchant.contains(query, ignoreCase = true) ||
+                tx.description.contains(query, ignoreCase = true) ||
+                categoryLabel(tx.category).contains(query, ignoreCase = true)
+            val matchesCategory = categoryFilter == null || tx.category == categoryFilter?.stableValue
+            matchesQuery && matchesCategory
+        }
+    }
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.expenses_title)) }) },
         floatingActionButton = {
@@ -71,9 +86,16 @@ fun ExpensesScreen(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error,
             )
-            if (expenses.isEmpty()) {
+            SearchFilterBar(
+                query = query,
+                onQueryChange = { query = it },
+                selectedCategory = categoryFilter,
+                onCategoryChange = { categoryFilter = it },
+                categories = Categories.expenseCategories,
+            )
+            if (filtered.isEmpty()) {
                 Text(
-                    text = stringResource(R.string.expenses_empty),
+                    text = stringResource(R.string.search_no_results),
                     modifier = Modifier.padding(top = 16.dp),
                 )
             } else {
@@ -81,7 +103,7 @@ fun ExpensesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(expenses) { expense ->
+                    items(filtered) { expense ->
                         TransactionRow(
                             transaction = expense,
                             onDelete = viewModel::deleteTransaction,

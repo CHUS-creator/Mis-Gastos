@@ -96,12 +96,14 @@ class MisGastosRepository(
         )
     }
 
-    @Suppress("unused")
     suspend fun updateTransaction(transaction: Transaction) =
         transactionDao.update(transaction)
 
     suspend fun deleteTransaction(transaction: Transaction) =
         transactionDao.delete(transaction)
+
+    suspend fun getAllTransactionsOnce(): List<Transaction> =
+        transactionDao.getAll().first()
 
     fun getAllBudgets(): Flow<List<Budget>> = budgetDao.getAll()
 
