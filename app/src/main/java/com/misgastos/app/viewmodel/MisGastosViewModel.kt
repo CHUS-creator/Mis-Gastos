@@ -23,12 +23,14 @@ import com.misgastos.app.util.DateUtils
 import com.misgastos.app.util.categoryLabel
 import android.net.Uri
 import java.util.Locale
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -53,21 +55,29 @@ class MisGastosViewModel(
     private val repository: MisGastosRepository,
 ) : ViewModel() {
 
-    private val now = System.currentTimeMillis()
+    private val nowFlow = kotlinx.coroutines.flow.flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            kotlinx.coroutines.delay(REFRESH_INTERVAL_MS)
+        }
+    }
 
-    val dashboard: StateFlow<DashboardState> = combine(
-        repository.totalBalance(),
-        repository.monthIncomes(now),
-        repository.monthExpenses(now),
-        repository.monthBalance(now),
-    ) { total, inc, exp, balance ->
-        DashboardState(
-            totalBalance = total,
-            monthIncome = inc,
-            monthExpenses = exp,
-            monthBalance = balance,
-            monthLabel = DateUtils.formatMonth(now),
-        )
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val dashboard: StateFlow<DashboardState> = nowFlow.flatMapLatest { now ->
+        combine(
+            repository.totalBalance(),
+            repository.monthIncomes(now),
+            repository.monthExpenses(now),
+            repository.monthBalance(now),
+        ) { total, inc, exp, balance ->
+            DashboardState(
+                totalBalance = total,
+                monthIncome = inc,
+                monthExpenses = exp,
+                monthBalance = balance,
+                monthLabel = DateUtils.formatMonth(now),
+            )
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardState())
 
     val recentTransactions: StateFlow<List<Transaction>> =
@@ -90,8 +100,11 @@ class MisGastosViewModel(
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val monthExpensesByCategory: StateFlow<List<CategoryTotal>> =
-        repository.monthExpensesByCategory(now).stateIn(
+        nowFlow.flatMapLatest { now ->
+            repository.monthExpensesByCategory(now)
+        }.stateIn(
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
@@ -335,6 +348,8 @@ class MisGastosViewModel(
     }
 
     companion object {
+        private const val REFRESH_INTERVAL_MS = 15 * 60 * 1000L
+
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
