@@ -24,11 +24,13 @@ import com.misgastos.app.util.categoryLabel
 import android.net.Uri
 import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -55,10 +57,10 @@ class MisGastosViewModel(
     private val repository: MisGastosRepository,
 ) : ViewModel() {
 
-    private val nowFlow = kotlinx.coroutines.flow.flow {
+    private val nowFlow = flow {
         while (true) {
             emit(System.currentTimeMillis())
-            kotlinx.coroutines.delay(REFRESH_INTERVAL_MS)
+            delay(REFRESH_INTERVAL_MS)
         }
     }
 

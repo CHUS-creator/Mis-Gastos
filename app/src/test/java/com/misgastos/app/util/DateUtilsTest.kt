@@ -8,7 +8,7 @@ import org.junit.Test
 class DateUtilsTest {
 
     @Test
-    fun `formatDate produce dd-MM-yyyy`() {
+    fun `formatDate produce ddMMyyyy con separador de barra`() {
         val cal = Calendar.getInstance().apply {
             set(2026, Calendar.SEPTEMBER, 18, 0, 0, 0)
             set(Calendar.MILLISECOND, 0)
