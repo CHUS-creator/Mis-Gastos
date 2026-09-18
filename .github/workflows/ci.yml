@@ -28,15 +28,20 @@ jobs:
       - name: Compilar APK debug
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Calcular nombre del artefacto
+        run: |
+          echo "APK_ARTIFACT=app-debug-apk-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          echo "TEST_REPORTS_ARTIFACT=test-reports-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
       - name: Subir APK como artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
+          name: ${{ env.APK_ARTIFACT }}
           path: app/build/outputs/apk/debug/app-debug.apk
 
       - name: Subir reportes de tests en fallo
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: ${{ env.TEST_REPORTS_ARTIFACT }}
           path: app/build/reports/tests/

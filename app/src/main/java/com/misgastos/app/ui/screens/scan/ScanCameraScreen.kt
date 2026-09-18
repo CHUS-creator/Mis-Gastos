@@ -8,9 +8,11 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -86,7 +88,9 @@ fun ScanCameraScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            ProcessCameraProvider.getInstance(context).get().unbindAll()
+            runCatching {
+                ProcessCameraProvider.getInstance(context).get().unbindAll()
+            }
         }
     }
 
@@ -102,12 +106,17 @@ fun ScanCameraScreen(
             )
         },
         bottomBar = {
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(24.dp),
-                contentAlignment = Alignment.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                Text(
+                    text = stringResource(R.string.scan_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
                 Button(
                     onClick = {
                         if (capturing) return@Button
@@ -140,28 +149,22 @@ fun ScanCameraScreen(
             }
         },
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                AndroidView(
-                    factory = { previewView },
-                    modifier = Modifier.fillMaxSize(),
+            AndroidView(
+                factory = { previewView },
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (cameraError) {
+                Text(
+                    text = stringResource(R.string.scan_camera_error),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
                 )
-                if (cameraError) {
-                    Text(
-                        text = stringResource(R.string.scan_camera_error),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
             }
         }
     }
