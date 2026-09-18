@@ -3,6 +3,7 @@ package com.misgastos.app.ui.screens.scan
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,7 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
@@ -52,6 +53,8 @@ fun ScanEntryScreen(
     }
     var showRationale by remember { mutableStateOf(false) }
 
+    BackHandler(onBack = onBack)
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -69,7 +72,7 @@ fun ScanEntryScreen(
                 title = { Text(stringResource(R.string.scan_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
                     }
                 },
             )
@@ -93,6 +96,7 @@ fun ScanEntryScreen(
                 Icon(Icons.Filled.CameraAlt, contentDescription = null)
                 Text(stringResource(R.string.scan_camera))
             }
+
             OutlinedButton(onClick = {
                 galleryLauncher.launch(
                     PickVisualMediaRequest(
@@ -103,6 +107,7 @@ fun ScanEntryScreen(
                 Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
                 Text(stringResource(R.string.scan_gallery))
             }
+
             if (showRationale && !hasCameraPermission) {
                 Text(
                     text = stringResource(R.string.scan_permission_camera_rationale),

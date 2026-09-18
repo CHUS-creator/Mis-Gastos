@@ -2,6 +2,7 @@ package com.misgastos.app.ui.screens.scan
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -15,7 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +58,8 @@ fun ScanCameraScreen(
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var capturing by remember { mutableStateOf(false) }
     var cameraError by remember { mutableStateOf(false) }
+
+    BackHandler(onBack = onBack)
 
     LaunchedEffect(Unit) {
         val future = ProcessCameraProvider.getInstance(context)
@@ -100,7 +103,7 @@ fun ScanCameraScreen(
                 title = { Text(stringResource(R.string.scan_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
                     }
                 },
             )

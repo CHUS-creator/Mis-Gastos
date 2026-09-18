@@ -22,12 +22,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,9 @@ fun ReviewReceiptScreen(
 ) {
     val receiptState by viewModel.pendingReceipt.collectAsState()
     val receipt = receiptState ?: run { onBack(); return }
+
+    BackHandler(onBack = onBack)
+
     var category by androidx.compose.runtime.remember(receipt.suggestedCategory) {
         androidx.compose.runtime.mutableStateOf(receipt.suggestedCategory ?: Categories.expenseCategories.first())
     }
@@ -65,7 +69,7 @@ fun ReviewReceiptScreen(
                 title = { Text(stringResource(R.string.review_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
                     }
                 },
             )
