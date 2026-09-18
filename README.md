@@ -23,7 +23,7 @@ App Android para control de gastos del hogar.
 - Room (base de datos local SQLite)
 - Navigation-Compose
 - ViewModel + StateFlow (arquitectura MVVM)
-- CameraX + ML Kit Text Recognition (OCR de tickets)
+- CameraX 1.4.2+ + ML Kit Text Recognition (OCR de tickets, compatible con páginas de 16 KB)
 - Coil (carga de imágenes)
 - KSP para la generación de código de Room
 - JUnit 4 (tests unitarios)
