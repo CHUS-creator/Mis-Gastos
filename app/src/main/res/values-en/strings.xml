@@ -80,6 +80,7 @@
     <string name="scan_processing_title">Processing receipt…</string>
     <string name="scan_processing_subtitle">Recognizing text with OCR</string>
     <string name="scan_error_recognition">Could not recognize the receipt text. Please try again.</string>
+    <string name="scan_camera_error">Could not start the camera. Check permissions and try again.</string>
 
     <string name="review_title">Review receipt</string>
     <string name="review_merchant">Merchant</string>

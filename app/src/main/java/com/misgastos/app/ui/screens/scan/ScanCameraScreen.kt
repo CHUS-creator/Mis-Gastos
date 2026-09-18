@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,10 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,17 +54,23 @@ fun ScanCameraScreen(
     val previewView = remember { PreviewView(context) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var capturing by remember { mutableStateOf(false) }
+    var cameraError by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+        val future = ProcessCameraProvider.getInstance(context)
+        val cameraProvider = try {
+            future.get()
+        } catch (e: Exception) {
+            cameraError = true
+            return@LaunchedEffect
+        }
         val preview = Preview.Builder().build().also {
             it.setSurfaceProvider(previewView.surfaceProvider)
         }
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
-        imageCapture = capture
-        runCatching {
+        try {
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
                 lifecycleOwner,
@@ -71,6 +78,15 @@ fun ScanCameraScreen(
                 preview,
                 capture,
             )
+            imageCapture = capture
+        } catch (e: Exception) {
+            cameraError = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            ProcessCameraProvider.getInstance(context).get().unbindAll()
         }
     }
 
@@ -95,28 +111,28 @@ fun ScanCameraScreen(
                 Button(
                     onClick = {
                         if (capturing) return@Button
+                        val capture = imageCapture ?: return@Button
                         capturing = true
-                        imageCapture?.let { capture ->
-                            val file = createImageFile(context)
-                            val output = ImageCapture.OutputFileOptions.Builder(file).build()
-                            capture.takePicture(
-                                output,
-                                ContextCompat.getMainExecutor(context),
-                                object : ImageCapture.OnImageSavedCallback {
-                                    override fun onImageSaved(results: ImageCapture.OutputFileResults) {
-                                        val savedUri = results.savedUri ?: Uri.fromFile(file)
-                                        capturing = false
-                                        onCaptured(savedUri)
-                                    }
+                        val file = createImageFile(context)
+                        val output = ImageCapture.OutputFileOptions.Builder(file).build()
+                        capture.takePicture(
+                            output,
+                            ContextCompat.getMainExecutor(context),
+                            object : ImageCapture.OnImageSavedCallback {
+                                override fun onImageSaved(results: ImageCapture.OutputFileResults) {
+                                    val savedUri = results.savedUri ?: Uri.fromFile(file)
+                                    capturing = false
+                                    onCaptured(savedUri)
+                                }
 
-                                    override fun onError(exception: ImageCaptureException) {
-                                        capturing = false
-                                    }
-                                },
-                            )
-                        } ?: run { capturing = false }
+                                override fun onError(exception: ImageCaptureException) {
+                                    capturing = false
+                                    cameraError = true
+                                }
+                            },
+                        )
                     },
-                    enabled = !capturing,
+                    enabled = !capturing && !cameraError,
                 ) {
                     Icon(Icons.Filled.Camera, contentDescription = null)
                     Text(stringResource(R.string.scan_capture))
@@ -139,6 +155,13 @@ fun ScanCameraScreen(
                     factory = { previewView },
                     modifier = Modifier.fillMaxSize(),
                 )
+                if (cameraError) {
+                    Text(
+                        text = stringResource(R.string.scan_camera_error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
             }
         }
     }

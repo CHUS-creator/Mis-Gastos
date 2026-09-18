@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.ui.components.CategoryDropdown
@@ -79,7 +80,9 @@ fun ReviewReceiptScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AsyncImage(
-                model = receipt.imageUri,
+                model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    .data(receipt.imageUri)
+                    .build(),
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
