@@ -1,5 +1,7 @@
 name: CI
 
+run-name: CI @${{ github.event.pull_request.head.sha || github.sha }}
+
 on:
   push:
     branches: [main]
@@ -30,8 +32,9 @@ jobs:
 
       - name: Calcular nombre del artefacto
         run: |
-          echo "APK_ARTIFACT=app-debug-apk-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
-          echo "TEST_REPORTS_ARTIFACT=test-reports-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          echo "APK_ARTIFACT=app-debug-apk-${SHA::7}" >> "$GITHUB_ENV"
+          echo "TEST_REPORTS_ARTIFACT=test-reports-${SHA::7}" >> "$GITHUB_ENV"
 
       - name: Subir APK como artefacto
         uses: actions/upload-artifact@v4
