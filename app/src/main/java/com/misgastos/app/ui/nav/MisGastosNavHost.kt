@@ -130,6 +130,7 @@ fun MisGastosNavHost() {
             composable(Screen.ScanCamera.route) {
                 ScanCameraScreen(
                     onCaptured = { uri -> viewModel.processReceipt(uri) },
+                    onImagePicked = { uri -> viewModel.processReceipt(uri) },
                     onBack = { navController.popBackStack() },
                 )
             }

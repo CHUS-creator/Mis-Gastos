@@ -3,6 +3,8 @@ package com.misgastos.app.ui.screens.scan
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -24,6 +26,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +50,7 @@ import java.util.Locale
 @Composable
 fun ScanCameraScreen(
     onCaptured: (Uri) -> Unit,
+    onImagePicked: (Uri) -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -57,13 +61,17 @@ fun ScanCameraScreen(
 
     BackHandler(onBack = onBack)
 
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> uri?.let(onImagePicked) }
+
     LaunchedEffect(Unit) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
         val preview = Preview.Builder().build().also {
             it.setSurfaceProvider(previewView.surfaceProvider)
         }
         val capture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .build()
         imageCapture = capture
         runCatching {
@@ -123,6 +131,18 @@ fun ScanCameraScreen(
                 ) {
                     Icon(Icons.Filled.Camera, contentDescription = null)
                     Text(stringResource(R.string.scan_capture))
+                }
+                IconButton(
+                    onClick = {
+                        galleryLauncher.launch(
+                            androidx.activity.result.PickVisualMediaRequest(
+                                androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly,
+                            ),
+                        )
+                    },
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                ) {
+                    Icon(Icons.Filled.PhotoLibrary, contentDescription = stringResource(R.string.scan_gallery))
                 }
             }
         },

@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.misgastos.app-debug-70:/xml_data_extraction_rules.xml.flat",
+        "source": "com.misgastos.app-main-72:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.misgastos.app-debug-70:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.misgastos.app-main-72:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.misgastos.app-debug-70:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.misgastos.app-main-72:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.misgastos.app-debug-70:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.misgastos.app-main-72:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.misgastos.app-debug-70:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.misgastos.app-main-72:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.misgastos.app-debug-70:/xml_backup_rules.xml.flat",
+        "source": "com.misgastos.app-main-72:/xml/backup_rules.xml"
+    }
+]

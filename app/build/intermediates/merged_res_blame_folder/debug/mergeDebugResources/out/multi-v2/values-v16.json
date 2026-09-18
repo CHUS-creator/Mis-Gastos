@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.misgastos.app-mergeDebugResources-68:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "/home/appuser/.gradle/caches/9.0.0/transforms/3bcb0e8eb91b581e3b1e4d1984d63176/transformed/appcompat-1.6.1/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -51,10 +51,6 @@ fun ScanEntryScreen(
         if (granted) onCameraGranted()
     }
 
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(Manifest.permission.CAMERA)
-    }
-
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> uri?.let(onImagePicked) }
