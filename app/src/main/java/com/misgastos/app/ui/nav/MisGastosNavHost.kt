@@ -31,6 +31,7 @@ import com.misgastos.app.ui.screens.income.IncomeScreen
 import com.misgastos.app.ui.screens.scan.ReviewReceiptScreen
 import com.misgastos.app.ui.screens.scan.ScanCameraScreen
 import com.misgastos.app.ui.screens.scan.ScanEntryScreen
+import com.misgastos.app.ui.screens.prices.PriceComparisonScreen
 import com.misgastos.app.ui.screens.stats.StatsScreen
 import com.misgastos.app.viewmodel.MisGastosViewModel
 import com.misgastos.app.viewmodel.ScanState
@@ -120,6 +121,12 @@ fun MisGastosNavHost() {
             }
             composable(Screen.Budget.route) { BudgetScreen(viewModel) }
             composable(Screen.Stats.route) { StatsScreen(viewModel) }
+            composable(Screen.Prices.route) {
+                PriceComparisonScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable(Screen.ScanEntry.route) {
                 ScanEntryScreen(
                     onCameraGranted = { navController.navigate(Screen.ScanCamera.route) },
