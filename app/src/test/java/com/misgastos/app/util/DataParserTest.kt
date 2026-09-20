@@ -9,11 +9,9 @@ class DataParserTest {
 
     @Test
     fun `parseCsv importa transacciones validas`() {
-        val csv = """
-            date,type,amount,category,description,merchant,source
-            15/09/2026,EXPENSE,12.50,Supermercado,Compra semanal,Mercadona,SCAN
-            16/09/2026,INCOME,1500.00,Salario,Nómina,,MANUAL
-        """.trimIndent()
+        val csv = "date,type,amount,category,description,merchant,source\n" +
+            "15/09/2026,EXPENSE,12.50,Supermercado,Compra semanal,Mercadona,SCAN\n" +
+            "16/09/2026,INCOME,1500.00,Salario,Nómina,,MANUAL\n"
 
         val bundle = DataParser.parseCsv(csv)
 
@@ -34,10 +32,8 @@ class DataParserTest {
 
     @Test
     fun `parseCsv maneja campos entrecomillados con comas`() {
-        val csv = """
-            date,type,amount,category,description,merchant,source
-            15/09/2026,EXPENSE,10.00,"Super,mercado","Compra con ""comillas""",Lidl,MANUAL
-        """.trimIndent()
+        val csv = "date,type,amount,category,description,merchant,source\n" +
+            "15/09/2026,EXPENSE,10.00,\"Super,mercado\",\"Compra con \"\"comillas\"\"\",Lidl,MANUAL\n"
 
         val bundle = DataParser.parseCsv(csv)
 
@@ -48,13 +44,11 @@ class DataParserTest {
 
     @Test
     fun `parseCsv ignora filas invalidas y avisa`() {
-        val csv = """
-            date,type,amount,category,description,merchant,source
-            fecha-mala,EXPENSE,10.00,Super,desc,Lidl,MANUAL
-            15/09/2026,TIPO_RARO,10.00,Super,desc,Lidl,MANUAL
-            15/09/2026,EXPENSE,no-numero,Super,desc,Lidl,MANUAL
-            15/09/2026,EXPENSE,10.00,Super,desc,Lidl,MANUAL
-        """.trimIndent()
+        val csv = "date,type,amount,category,description,merchant,source\n" +
+            "fecha-mala,EXPENSE,10.00,Super,desc,Lidl,MANUAL\n" +
+            "15/09/2026,TIPO_RARO,10.00,Super,desc,Lidl,MANUAL\n" +
+            "15/09/2026,EXPENSE,no-numero,Super,desc,Lidl,MANUAL\n" +
+            "15/09/2026,EXPENSE,10.00,Super,desc,Lidl,MANUAL\n"
 
         val bundle = DataParser.parseCsv(csv)
 
@@ -88,11 +82,9 @@ class DataParserTest {
 
     @Test
     fun `parseCsv acepta GASTO y INGRESO como tipos en espanol`() {
-        val csv = """
-            date,type,amount,category
-            15/09/2026,GASTO,10.00,Super
-            16/09/2026,INGRESO,100.00,Salario
-        """.trimIndent()
+        val csv = "date,type,amount,category\n" +
+            "15/09/2026,GASTO,10.00,Super\n" +
+            "16/09/2026,INGRESO,100.00,Salario\n"
 
         val bundle = DataParser.parseCsv(csv)
 
@@ -103,12 +95,12 @@ class DataParserTest {
 
     @Test
     fun `parseJson importa transacciones con lineItems`() {
-        val json = """
-            [
-              {"date":"15/09/2026","type":"EXPENSE","amount":"12.50","category":"Supermercado","description":"Compra","merchant":"Lidl","source":"SCAN","lineItems":[{"name":"Leche","price":"1.19","quantity":"1.00"},{"name":"Pan","price":"0.90","quantity":"2.00"}]},
-              {"date":"16/09/2026","type":"INCOME","amount":"1500.00","category":"Salario","description":"","merchant":"","source":"MANUAL"}
-            ]
-        """.trimIndent()
+        val json = "[{\"date\":\"15/09/2026\",\"type\":\"EXPENSE\",\"amount\":\"12.50\"," +
+            "\"category\":\"Supermercado\",\"description\":\"Compra\",\"merchant\":\"Lidl\",\"source\":\"SCAN\"," +
+            "\"lineItems\":[{\"name\":\"Leche\",\"price\":\"1.19\",\"quantity\":\"1.00\"}," +
+            "{\"name\":\"Pan\",\"price\":\"0.90\",\"quantity\":\"2.00\"}]}," +
+            "{\"date\":\"16/09/2026\",\"type\":\"INCOME\",\"amount\":\"1500.00\"," +
+            "\"category\":\"Salario\",\"description\":\"\",\"merchant\":\"\",\"source\":\"MANUAL\"}]"
 
         val bundle = DataParser.parseJson(json)
 
@@ -125,12 +117,8 @@ class DataParserTest {
 
     @Test
     fun `parseJson ignora transacciones con datos invalidos`() {
-        val json = """
-            [
-              {"date":"fecha-mala","type":"EXPENSE","amount":"12.50","category":"Super"},
-              {"date":"16/09/2026","type":"EXPENSE","amount":"12.50","category":"Super"}
-            ]
-        """.trimIndent()
+        val json = "[{\"date\":\"fecha-mala\",\"type\":\"EXPENSE\",\"amount\":\"12.50\",\"category\":\"Super\"}," +
+            "{\"date\":\"16/09/2026\",\"type\":\"EXPENSE\",\"amount\":\"12.50\",\"category\":\"Super\"}]"
 
         val bundle = DataParser.parseJson(json)
 
@@ -146,10 +134,9 @@ class DataParserTest {
     }
 
     @Test
-    fun `parseJson con objetos anidados y caracteres escapados`() {
-        val json = """
-            [{"date":"15/09/2026","type":"EXPENSE","amount":"10.00","category":"Super","description":"Café \"especial\"","merchant":"Lidl"}]
-        """.trimIndent()
+    fun `parseJson con caracteres escapados`() {
+        val json = "[{\"date\":\"15/09/2026\",\"type\":\"EXPENSE\",\"amount\":\"10.00\"," +
+            "\"category\":\"Super\",\"description\":\"Café \\\"especial\\\"\",\"merchant\":\"Lidl\"}]"
 
         val bundle = DataParser.parseJson(json)
 
