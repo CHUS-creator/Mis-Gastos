@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Configurar Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Ejecutar tests unitarios
         run: ./gradlew test --stacktrace
@@ -37,14 +37,14 @@ jobs:
           echo "TEST_REPORTS_ARTIFACT=test-reports-${SHA::7}" >> "$GITHUB_ENV"
 
       - name: Subir APK como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.APK_ARTIFACT }}
           path: app/build/outputs/apk/debug/app-debug.apk
 
       - name: Subir reportes de tests en fallo
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.TEST_REPORTS_ARTIFACT }}
           path: app/build/reports/tests/
