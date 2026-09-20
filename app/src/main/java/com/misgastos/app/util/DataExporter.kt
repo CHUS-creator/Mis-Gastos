@@ -94,7 +94,7 @@ object DataFormat {
     }
 
     fun jsonEscape(s: String): String =
-        "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") +
+        "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"")
             .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\""
 
     fun jsonStringOf(json: String, key: String): String? {
