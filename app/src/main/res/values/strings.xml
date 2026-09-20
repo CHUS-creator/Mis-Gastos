@@ -80,6 +80,7 @@
     <string name="scan_processing_title">Procesando ticket…</string>
     <string name="scan_processing_subtitle">Reconociendo texto con OCR</string>
     <string name="scan_error_recognition">No se pudo reconocer el texto del ticket. Inténtalo de nuevo.</string>
+    <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>
     <string name="review_merchant">Comercio</string>

@@ -2,16 +2,22 @@ package com.misgastos.app.ui.screens.scan
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,10 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,17 +57,25 @@ fun ScanCameraScreen(
     val previewView = remember { PreviewView(context) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var capturing by remember { mutableStateOf(false) }
+    var cameraError by remember { mutableStateOf(false) }
+
+    BackHandler(onBack = onBack)
 
     LaunchedEffect(Unit) {
-        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+        val future = ProcessCameraProvider.getInstance(context)
+        val cameraProvider = try {
+            future.get()
+        } catch (e: Exception) {
+            cameraError = true
+            return@LaunchedEffect
+        }
         val preview = Preview.Builder().build().also {
             it.setSurfaceProvider(previewView.surfaceProvider)
         }
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
-        imageCapture = capture
-        runCatching {
+        try {
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
                 lifecycleOwner,
@@ -71,6 +83,17 @@ fun ScanCameraScreen(
                 preview,
                 capture,
             )
+            imageCapture = capture
+        } catch (e: Exception) {
+            cameraError = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            runCatching {
+                ProcessCameraProvider.getInstance(context).get().unbindAll()
+            }
         }
     }
 
@@ -80,43 +103,48 @@ fun ScanCameraScreen(
                 title = { Text(stringResource(R.string.scan_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
                     }
                 },
             )
         },
         bottomBar = {
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(24.dp),
-                contentAlignment = Alignment.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                Text(
+                    text = stringResource(R.string.scan_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
                 Button(
                     onClick = {
                         if (capturing) return@Button
+                        val capture = imageCapture ?: return@Button
                         capturing = true
-                        imageCapture?.let { capture ->
-                            val file = createImageFile(context)
-                            val output = ImageCapture.OutputFileOptions.Builder(file).build()
-                            capture.takePicture(
-                                output,
-                                ContextCompat.getMainExecutor(context),
-                                object : ImageCapture.OnImageSavedCallback {
-                                    override fun onImageSaved(results: ImageCapture.OutputFileResults) {
-                                        val savedUri = results.savedUri ?: Uri.fromFile(file)
-                                        capturing = false
-                                        onCaptured(savedUri)
-                                    }
+                        val file = createImageFile(context)
+                        val output = ImageCapture.OutputFileOptions.Builder(file).build()
+                        capture.takePicture(
+                            output,
+                            ContextCompat.getMainExecutor(context),
+                            object : ImageCapture.OnImageSavedCallback {
+                                override fun onImageSaved(results: ImageCapture.OutputFileResults) {
+                                    val savedUri = results.savedUri ?: Uri.fromFile(file)
+                                    capturing = false
+                                    onCaptured(savedUri)
+                                }
 
-                                    override fun onError(exception: ImageCaptureException) {
-                                        capturing = false
-                                    }
-                                },
-                            )
-                        } ?: run { capturing = false }
+                                override fun onError(exception: ImageCaptureException) {
+                                    capturing = false
+                                    cameraError = true
+                                }
+                            },
+                        )
                     },
-                    enabled = !capturing,
+                    enabled = !capturing && !cameraError,
                 ) {
                     Icon(Icons.Filled.Camera, contentDescription = null)
                     Text(stringResource(R.string.scan_capture))
@@ -124,20 +152,21 @@ fun ScanCameraScreen(
             }
         },
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                AndroidView(
-                    factory = { previewView },
-                    modifier = Modifier.fillMaxSize(),
+            AndroidView(
+                factory = { previewView },
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (cameraError) {
+                Text(
+                    text = stringResource(R.string.scan_camera_error),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
                 )
             }
         }

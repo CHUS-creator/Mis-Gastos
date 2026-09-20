@@ -74,17 +74,16 @@ object ReceiptParser {
     }
 
     private fun parseAmount(text: String): Double? =
-        text.replace(".", "", false)
-            .replace(",", ".", false)
-            .replace("€", "", true)
+        text.replace(".", "", ignoreCase = false)
+            .replace(",", ".", ignoreCase = false)
+            .replace("€", "", ignoreCase = true)
             .trim()
             .toDoubleOrNull()
 
     private fun findTotal(lines: List<String>, template: ReceiptTemplate?): Double? {
         val templateKeyword = template?.totalKeyword?.takeIf { it.isNotBlank() }
         if (templateKeyword != null) {
-            val byTemplate = findTotalByKeyword(lines, templateKeyword, requireStart = true)
-            if (byTemplate != null) return byTemplate
+            findTotalByKeyword(lines, templateKeyword, requireStart = true)?.let { return it }
         }
         for (kw in genericTotalKeywords) {
             val value = findTotalByKeyword(lines, kw, requireStart = false)
@@ -139,8 +138,8 @@ object ReceiptParser {
             val lower = line.lowercase(Locale.getDefault())
             if (noiseLines.any { lower.contains(it) }) continue
             if (numberRegex.containsMatchIn(line)) continue
-            if (line.length < 3 || line.length > 40) continue
-            if (line == line.uppercase(Locale.getDefault()) && line.length > 25) continue
+            if (line.length !in 3..40) continue
+            if ((line == line.uppercase(Locale.getDefault())) && (line.length > 25)) continue
             return line
         }
         return null
@@ -155,7 +154,7 @@ object ReceiptParser {
             val name = match.groupValues[1].trim()
             val price = parseAmount(match.groupValues[2]) ?: continue
             if (price <= 0.0) continue
-            if (total != null && price == total && name.length <= 8) continue
+            if ((total != null) && (price == total) && (name.length <= 8)) continue
             if (lower.startsWith("total") || lower.startsWith("suma")) continue
             items.add(ParsedLineItem(name = name, price = price))
         }
