@@ -116,6 +116,15 @@
     <string name="search_no_results">No results found.</string>
     <string name="filter_category_all">All</string>
 
+    <string name="filter_period_all">All time</string>
+    <string name="filter_period_week">Last week</string>
+    <string name="filter_period_month">Last month</string>
+    <string name="filter_period_year">Last year</string>
+    <string name="filter_period_label">Period</string>
+    <string name="filter_merchant_all">All merchants</string>
+    <string name="filter_merchant_label">Merchant</string>
+    <string name="filter_no_merchants">No merchants</string>
+
     <string name="export_title">Export data</string>
     <string name="export_snackbar_csv">CSV exported: %1$s</string>
     <string name="export_snackbar_json">JSON exported: %1$s</string>
