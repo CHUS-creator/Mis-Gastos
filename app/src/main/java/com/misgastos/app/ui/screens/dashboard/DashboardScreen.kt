@@ -85,6 +85,16 @@ fun DashboardScreen(
             viewModel.showExportResult(context, ok, uri, MisGastosViewModel.ExportFormat.JSON)
         }
     }
+    val importCsvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.importFromUri(uri, MisGastosViewModel.ExportFormat.CSV) { _, _ -> }
+    }
+    val importJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.importFromUri(uri, MisGastosViewModel.ExportFormat.JSON) { _, _ -> }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -109,6 +119,20 @@ fun DashboardScreen(
                             onClick = {
                                 exportMenu = false
                                 jsonLauncher.launch("misgastos.json")
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_import_csv)) },
+                            onClick = {
+                                exportMenu = false
+                                importCsvLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv"))
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_import_json)) },
+                            onClick = {
+                                exportMenu = false
+                                importJsonLauncher.launch(arrayOf("application/json"))
                             },
                         )
                     }

@@ -16,6 +16,8 @@ import com.misgastos.app.ocr.OcrRecognizer
 import com.misgastos.app.ocr.ReceiptTemplate
 import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.util.DataExporter
+import com.misgastos.app.util.DataFormat
+import com.misgastos.app.util.DataParser
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
 import com.misgastos.app.ocr.ReceiptParser
@@ -303,6 +305,58 @@ class MisGastosViewModel(
     }
 
     enum class ExportFormat { CSV, JSON }
+
+    fun importFromUri(uri: Uri, format: ExportFormat, onResult: (Int, Int) -> Unit) {
+        viewModelScope.launch {
+            val text = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    input.bufferedReader().readText()
+                }
+            }.getOrNull()
+            if (text == null) {
+                _snackbar.value = context.getString(R.string.import_error)
+                onResult(0, 0)
+                return@launch
+            }
+            val bundle = when (format) {
+                ExportFormat.CSV -> DataParser.parseCsv(text)
+                ExportFormat.JSON -> DataParser.parseJson(text)
+            }
+            if (bundle.transactions.isEmpty()) {
+                _snackbar.value = context.getString(
+                    R.string.import_nothing,
+                    bundle.warnings.firstOrNull() ?: "",
+                )
+                onResult(0, 0)
+                return@launch
+            }
+            bundle.transactions.forEach { tx ->
+                val date = DataFormat.parseDate(tx.dateText) ?: System.currentTimeMillis()
+                val source = if (tx.source == EntrySource.SCAN.name) EntrySource.SCAN else EntrySource.MANUAL
+                val defaultCategory = if (tx.type == TransactionType.EXPENSE) {
+                    CategoryKey.OTHER_EXPENSE.stableValue
+                } else {
+                    CategoryKey.OTHER_INCOME.stableValue
+                }
+                val transaction = Transaction(
+                    type = tx.type,
+                    amount = tx.amount,
+                    category = tx.category.ifBlank { defaultCategory },
+                    description = tx.description,
+                    date = date,
+                    merchant = tx.merchant,
+                    source = source,
+                )
+                val items = tx.lineItems
+                    .filter { it.name.isNotBlank() && it.price > 0.0 }
+                    .map { LineItem(name = it.name, price = it.price, quantity = it.quantity) }
+                repository.addTransactionWithItems(transaction, items)
+            }
+            val skipped = bundle.warnings.size
+            _snackbar.value = context.getString(R.string.import_success, bundle.transactions.size, skipped)
+            onResult(bundle.transactions.size, skipped)
+        }
+    }
 
     fun consumeSnackbar() {
         _snackbar.value = null
