@@ -23,18 +23,22 @@ object ReceiptParser {
     private val numberRegex = Regex("(\\d{1,8}[.,]\\d{2})\\s*€?")
 
     private val noiseLines = listOf(
-        "iva", "cif", "nif", "tlf", "tel", "teléf", "telefono", "teléfono",
+        "iva", "igic", "cif", "nif", "tlf", "tel", "teléf", "telefono", "teléfono",
         "www", "http", "gracias", "gràcies", "merci", "thank",
         "c/ ", "avda", "av.", "pol.", "polígono", "calle",
         "c.p.", "cp ", "€/kg", "€/ud", "ud.", "kg.", "tarjeta", "efectivo",
-        "cambio", "entregado", "vuelto", "vuelta", "apto", "operación",
-        "nº op", "aut.", "autoriz", "referencia", "lote",
+        "cambio", "entregado", "entrega", "devolución", "devolucion", "vuelto", "vuelta", "apto", "operación",
+        "nº op", "aut.", "autoriz", "referencia", "lote", "desc.",
     )
 
     private val lineItemRegex = Regex("^(.+?)\\s+(\\d{1,8}[.,]\\d{2})\\s*€?$")
 
+    private val spacedLettersRegex = Regex("(?:[A-Za-zÁÉÍÓÚÜÑáéíóúñü] ){2,}[A-Za-zÁÉÍÓÚÜÑáéíóúñü]")
+
     fun parse(rawText: String, template: ReceiptTemplate? = null): ParsedReceipt {
         val lines = rawText.lines()
+            .map { it.replace("|", " ") }
+            .map { it.replace(Regex("\\s+"), " ") }
             .map { it.trim() }
             .filter { it.isNotBlank() }
 
@@ -73,12 +77,16 @@ object ReceiptParser {
         return null
     }
 
-    private fun parseAmount(text: String): Double? =
-        text.replace(".", "", ignoreCase = false)
-            .replace(",", ".", ignoreCase = false)
-            .replace("€", "", ignoreCase = true)
-            .trim()
-            .toDoubleOrNull()
+    private fun parseAmount(text: String): Double? {
+        val cleaned = text.replace("€", "", ignoreCase = true).trim()
+        val normalized = when {
+            cleaned.contains(",") && cleaned.contains(".") ->
+                cleaned.replace(".", "", ignoreCase = false).replace(",", ".", ignoreCase = false)
+            cleaned.contains(",") -> cleaned.replace(",", ".", ignoreCase = false)
+            else -> cleaned
+        }
+        return normalized.toDoubleOrNull()
+    }
 
     private fun findTotal(lines: List<String>, template: ReceiptTemplate?): Double? {
         val templateKeyword = template?.totalKeyword?.takeIf { it.isNotBlank() }
@@ -94,12 +102,15 @@ object ReceiptParser {
     }
 
     private fun findTotalByKeyword(lines: List<String>, keyword: String, requireStart: Boolean): Double? {
-        for (line in lines) {
+        for ((index, line) in lines.withIndex()) {
             val lower = line.lowercase(Locale.getDefault())
             val matches = if (requireStart) lower.startsWith(keyword) else lower.contains(keyword)
             if (matches) {
-                val match = numberRegex.find(line)
-                return match?.let { parseAmount(it.value) }
+                numberRegex.find(line)?.let { return parseAmount(it.value) }
+                lines.getOrNull(index + 1)?.let { next ->
+                    numberRegex.find(next)?.let { return parseAmount(it.value) }
+                }
+                return null
             }
         }
         return null
@@ -140,10 +151,13 @@ object ReceiptParser {
             if (numberRegex.containsMatchIn(line)) continue
             if (line.length !in 3..40) continue
             if ((line == line.uppercase(Locale.getDefault())) && (line.length > 25)) continue
-            return line
+            return collapseSpacedLetters(line)
         }
         return null
     }
+
+    private fun collapseSpacedLetters(line: String): String =
+        spacedLettersRegex.replace(line) { it.value.replace(" ", "") }
 
     private fun findLineItems(lines: List<String>, total: Double?): List<ParsedLineItem> {
         val items = mutableListOf<ParsedLineItem>()

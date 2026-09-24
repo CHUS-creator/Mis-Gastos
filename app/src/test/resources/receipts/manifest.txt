@@ -1,0 +1,31 @@
+# Corpus de tickets reales (texto OCR)
+#
+# Cada ticket es un .txt con el texto extraído de un PDF real.
+# Fuente: biblioteca "TICKETS" de Mistral Studio (OCR Mistral), septiembre 2026.
+# El texto conserva el ruido típico del OCR sobre papel térmico.
+#
+# Campos del manifiesto (separador |):
+#   archivo | total | fecha_esperada | comercio_esperado | num_lineas_producto
+#
+# - total: importe final pagado, con coma decimal
+# - fecha_esperada: formato dd/MM/yyyy normalizado
+# - comercio_esperado: nombre normalizado del comercio
+# - num_lineas_producto: líneas de producto esperadas (-1 = no se exige)
+#   Se exige 1..N líneas detectadas: el OCR degrada nombres y el parser puede
+#   fusionar líneas, pero no debe inventar líneas de más.
+#   bershka: el precio va en mitad de línea (columnas TSP/IMP/UD), el parser
+#   aún no lo extrae; queda como limitación documentada (-1).
+# comercio "-" = el formato del ticket no permite deducir el comercio con las
+#   heurísticas actuales (gasolineras: cabecera metrologica; farmacia: nombre
+#   en mayúsculas largo). Limitaciones documentadas, no fallos del corpus.
+mercadona_2026-07-01.txt|37,97|01/07/2026|mercadona|7
+mercadona_2026-04-27.txt|54,56|27/04/2026|mercadona|15
+lidl_2026-04-30.txt|59,17|30/04/2026|lidl|18
+moeve_2026-07-01.txt|20,00|01/07/2026|-|-1
+moeve_2026-04-30.txt|20,00|30/04/2026|-|-1
+moeve_2026-04-27.txt|20,00|27/04/2026|-|-1
+bershka_2026-04-30.txt|11,98|30/04/2026|bershka|-1
+padilla_2026-04-26.txt|9,70|26-04-2026|padilla|3
+primor_2026-04-30.txt|34,65|30/04/26|primor|2
+artybelleza_2026-04-30.txt|11,70|30/04/2026|artybelleza|1
+farmacia_2026-04-23.txt|2,51|23/04/26|-|2
