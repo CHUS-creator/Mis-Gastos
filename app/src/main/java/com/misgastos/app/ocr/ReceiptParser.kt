@@ -8,8 +8,13 @@ object ReceiptParser {
     private val genericTotalKeywords = listOf(
         "total a pagar", "importe total", "total tarjeta",
         "total efectivo", "total factura", "total pagado",
-        "suma total", "total €", "total a", "total", "importe",
+        "suma total", "total €", "total a", "total (impuestos incl",
+        "total", "importe",
     )
+
+    private val numericOnlyRegex = Regex("^[\\d\\s.,]+\\s*€?$")
+
+    private val decimalStartRegex = Regex("^\\d+[.,]\\d")
 
     private val dateRegexes = listOf(
         Regex("(\\d{2}[/.-]\\d{2}[/.-]\\d{4})"),
@@ -20,7 +25,7 @@ object ReceiptParser {
 
     private val dateFormats = listOf("dd/MM/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "yyyy/MM/dd", "dd/MM/yy")
 
-    private val numberRegex = Regex("(\\d{1,8}[.,]\\d{2})\\s*€?")
+    private val numberRegex = Regex("(?<!\\d)(\\d{1,8}[.,]\\d{2})\\b\\s*€?")
 
     private val noiseLines = listOf(
         "iva", "igic", "cif", "nif", "tlf", "tel", "teléf", "telefono", "teléfono",
@@ -29,6 +34,8 @@ object ReceiptParser {
         "c.p.", "cp ", "€/kg", "€/ud", "ud.", "kg.", "tarjeta", "efectivo",
         "cambio", "entregado", "entrega", "devolución", "devolucion", "vuelto", "vuelta", "apto", "operación",
         "nº op", "aut.", "autoriz", "referencia", "lote", "desc.",
+        "impuesto", "base", "copia", "mastercard", "impresion", "impresión",
+        "super reducido",
     )
 
     private val lineItemRegex = Regex("^(.+?)\\s+(\\d{1,8}[.,]\\d{2})\\s*€?$")
@@ -104,13 +111,15 @@ object ReceiptParser {
     private fun findTotalByKeyword(lines: List<String>, keyword: String, requireStart: Boolean): Double? {
         for ((index, line) in lines.withIndex()) {
             val lower = line.lowercase(Locale.getDefault())
+            if (lower.contains("subtotal")) continue
             val matches = if (requireStart) lower.startsWith(keyword) else lower.contains(keyword)
             if (matches) {
                 numberRegex.find(line)?.let { return parseAmount(it.value) }
                 lines.getOrNull(index + 1)?.let { next ->
-                    numberRegex.find(next)?.let { return parseAmount(it.value) }
+                    if (numericOnlyRegex.matches(next.trim())) {
+                        numberRegex.find(next)?.let { return parseAmount(it.value) }
+                    }
                 }
-                return null
             }
         }
         return null
@@ -169,7 +178,8 @@ object ReceiptParser {
             val price = parseAmount(match.groupValues[2]) ?: continue
             if (price <= 0.0) continue
             if ((total != null) && (price == total) && (name.length <= 8)) continue
-            if (lower.startsWith("total") || lower.startsWith("suma")) continue
+            if (lower.startsWith("total") || lower.startsWith("suma") || lower.startsWith("subtotal")) continue
+            if (decimalStartRegex.containsMatchIn(name)) continue
             items.add(ParsedLineItem(name = name, price = price))
         }
         return items

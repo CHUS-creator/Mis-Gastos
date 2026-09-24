@@ -141,6 +141,14 @@ archivo | total | fecha | comercio | num_lineas_producto
   (cabecera "DATOS METROLOGICOS", nombre largo en mayúsculas).
 - Bershka: precio en columnas en mitad de línea (`TSP IMP UD PRECIO`),
   no se extraen líneas de producto.
+- Fechas mal OCR-adas (`"04 06.2026"`, `"10.06 2026"`): se documentan con
+  `-` en el manifiesto; el fallback no es fiable.
+- Precios con 3 decimales (ferretería `1,750`): `numberRegex` exige 2
+  decimales; sin líneas ni total fiable.
+- Tickets con precios en columnas y texto detrás (`98,97 EUR`) o con
+  cantidades delante (`0,466 9,99 4,66`): solo se exige el total.
+- Restaurantes con `Cantidad Nombre Precio Total` en una línea: se exige
+  el mínimo de líneas, el parser puede fusionar.
 - El corpus es de OCR Mistral; falta cobertura de ruido propio de ML Kit
   (pendiente: capturar muestras reales desde la tablet).
 
@@ -163,6 +171,9 @@ en el mismo PR en que lo detectaste.
 - PRs abiertos (todos CI verde al redactarse): #4 filtros de
   periodo/comercio, #5 comparación de precios, #6 importación CSV/JSON,
   #7 corpus OCR de tickets reales + AGENTS.md.
+- Corpus OCR: 30 tickets (batch 1: 11, batch 2: 19, septiembre 2026).
+  Parser: total 29/29 exigibles, fecha 27/27 exigibles, comercio 14/14
+  exigibles, líneas dentro de rango en todos los exigibles.
 - Pendiente decidido: pantalla de banco de pruebas para lotes de fotos
   (OCR + parser sobre N imágenes y compartir el texto) — útil para generar
   corpus de ML Kit desde la tablet.
