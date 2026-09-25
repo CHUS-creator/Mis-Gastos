@@ -144,8 +144,9 @@ archivo | total | fecha | comercio | num_lineas_producto
   nombres degradados por el OCR; Decathlon aún no (texto "EUR" detrás).
 - Fechas mal OCR-adas (`"04 06.2026"`, `"10.06 2026"`): `mangledDateRegexes`
   las repara como ultimo recurso (dd + espacio + MM.yyyy y variantes).
-- Precios con 3 decimales (ferretería `1,750`): `numberRegex` exige 2
-  decimales; sin líneas ni total fiable.
+- Precios con 3 decimales (ferretería `1,750`): `numberRegex` acepta 2-3
+  decimales; el ticket no imprime total (el fallback da el máximo suelto,
+  no fiable) y queda `-` en el manifiesto.
 - Precios con texto "EUR" detras: se elimina el token de moneda antes de
   parsear la linea (Decathlon ya extrae lineas). Los nombres de linea se
   cortan en el primer numero incrustado (quita cantidades/refrids de cola).

@@ -25,7 +25,7 @@ object ReceiptParser {
 
     private val dateFormats = listOf("dd/MM/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "yyyy/MM/dd", "dd/MM/yy")
 
-    private val numberRegex = Regex("(?<!\\d)(\\d{1,8}[.,]\\d{2})\\b\\s*€?")
+    private val numberRegex = Regex("(?<!\\d)(\\d{1,8}[.,]\\d{2,3})\\b\\s*€?")
 
     private val noiseLines = listOf(
         "iva", "igic", "cif", "nif", "tlf", "tel", "teléf", "telefono", "teléfono",
@@ -47,7 +47,7 @@ object ReceiptParser {
 
     private val payKeywords = listOf("importe", "entregado", "cobrado", "tarjeta", "pago", "visa")
 
-    private val lineItemRegex = Regex("^(.+?)\\s+(\\d{1,8}[.,]\\d{2})\\s*€?$")
+    private val lineItemRegex = Regex("^(.+?)\\s+(\\d{1,8}[.,]\\d{2,3})\\s*€?$")
 
     private val spacedLettersRegex = Regex("(?:[A-Za-zÁÉÍÓÚÜÑáéíóúñü] ){2,}[A-Za-zÁÉÍÓÚÜÑáéíóúñü]")
 
@@ -184,7 +184,8 @@ object ReceiptParser {
             if ((line == line.uppercase(Locale.getDefault())) && (line.length > 25)) continue
             if (line.count { it.isLetter() } < 3) continue
             if (line.first().isDigit()) continue
-            return collapseSpacedLetters(line).trim(' ', '#', '*')
+            return collapseSpacedLetters(line)
+                .trim(' ', '#', '*', '.', ',', '-')
         }
         return null
     }
