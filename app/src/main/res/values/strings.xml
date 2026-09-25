@@ -158,6 +158,11 @@
     <string name="export_snackbar_csv">CSV exportado: %1$s</string>
     <string name="export_snackbar_json">JSON exportado: %1$s</string>
     <string name="export_error">No se pudo exportar el archivo.</string>
+    <string name="action_import_csv">Importar CSV…</string>
+    <string name="action_import_json">Importar JSON…</string>
+    <string name="import_success">Importadas %1$d transacciones (%2$d ignoradas).</string>
+    <string name="import_nothing">No se importó nada. %1$s</string>
+    <string name="import_error">No se pudo leer el archivo.</string>
     <string name="export_no_data">No hay transacciones para exportar.</string>
     <string name="export_share_title">Compartir MisGastos</string>
     <string name="export_column_date">Fecha</string>
