@@ -1,9 +1,18 @@
 package com.misgastos.app.util
 
+import com.misgastos.app.R
+
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+enum class DateRangeFilter(val labelRes: Int) {
+    ALL(R.string.filter_period_all),
+    WEEK(R.string.filter_period_week),
+    MONTH(R.string.filter_period_month),
+    YEAR(R.string.filter_period_year),
+}
 
 object DateUtils {
     private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -34,4 +43,29 @@ object DateUtils {
 
     @Suppress("unused")
     fun currentMonthRange(): LongRange = monthRange(System.currentTimeMillis())
+
+    fun rangeFor(filter: DateRangeFilter, now: Long = System.currentTimeMillis()): LongRange? =
+        when (filter) {
+            DateRangeFilter.ALL -> null
+            DateRangeFilter.WEEK -> {
+                val start = now - WEEK_MS
+                start..now
+            }
+            DateRangeFilter.MONTH -> {
+                val cal = Calendar.getInstance().apply {
+                    time = Date(now)
+                    add(Calendar.MONTH, -1)
+                }
+                cal.timeInMillis..now
+            }
+            DateRangeFilter.YEAR -> {
+                val cal = Calendar.getInstance().apply {
+                    time = Date(now)
+                    add(Calendar.YEAR, -1)
+                }
+                cal.timeInMillis..now
+            }
+        }
+
+    private const val WEEK_MS = 7L * 24 * 60 * 60 * 1000
 }

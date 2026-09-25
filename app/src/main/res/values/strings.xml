@@ -135,6 +135,15 @@
     <string name="search_no_results">No hay resultados para la búsqueda.</string>
     <string name="filter_category_all">Todas</string>
 
+    <string name="filter_period_all">Acumulado</string>
+    <string name="filter_period_week">Última semana</string>
+    <string name="filter_period_month">Último mes</string>
+    <string name="filter_period_year">Último año</string>
+    <string name="filter_period_label">Periodo</string>
+    <string name="filter_merchant_all">Todos los comercios</string>
+    <string name="filter_merchant_label">Comercio</string>
+    <string name="filter_no_merchants">Sin comercios</string>
+
     <string name="export_title">Exportar datos</string>
     <string name="export_snackbar_csv">CSV exportado: %1$s</string>
     <string name="export_snackbar_json">JSON exportado: %1$s</string>

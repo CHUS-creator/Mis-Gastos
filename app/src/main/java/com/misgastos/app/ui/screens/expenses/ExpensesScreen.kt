@@ -34,6 +34,8 @@ import com.misgastos.app.ui.components.TransactionRow
 import com.misgastos.app.ui.components.formatMoney
 import com.misgastos.app.util.Categories
 import com.misgastos.app.util.CategoryKey
+import com.misgastos.app.util.DateRangeFilter
+import com.misgastos.app.util.DateUtils
 import com.misgastos.app.viewmodel.MisGastosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,16 +49,28 @@ fun ExpensesScreen(
     var showAdd by remember { mutableStateOf(value = false) }
     var query by remember { mutableStateOf("") }
     var categoryFilter by remember { mutableStateOf<CategoryKey?>(null) }
-    val filtered = remember(expenses, query, categoryFilter) {
+    var merchantFilter by remember { mutableStateOf<String?>(null) }
+    var periodFilter by remember { mutableStateOf(DateRangeFilter.ALL) }
+
+    val merchants = remember(expenses) {
+        expenses.map { it.merchant }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+
+    val filtered = remember(expenses, query, categoryFilter, merchantFilter, periodFilter) {
+        val dateRange = DateUtils.rangeFor(periodFilter)
         expenses.filter { tx ->
             val matchesQuery = query.isBlank() ||
                 tx.merchant.contains(query, ignoreCase = true) ||
                 tx.description.contains(query, ignoreCase = true) ||
                 tx.category.contains(query, ignoreCase = true)
             val matchesCategory = categoryFilter == null || tx.category == categoryFilter?.stableValue
-            matchesQuery && matchesCategory
+            val matchesMerchant = merchantFilter == null || tx.merchant.equals(merchantFilter, ignoreCase = true)
+            val matchesPeriod = dateRange == null || tx.date in dateRange
+            matchesQuery && matchesCategory && matchesMerchant && matchesPeriod
         }
     }
+    val filteredTotal = filtered.sumOf { it.amount }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.expenses_title)) }) },
         floatingActionButton = {
@@ -75,12 +89,22 @@ fun ExpensesScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = stringResource(R.string.expenses_total_month),
+                text = stringResource(
+                    if (periodFilter == DateRangeFilter.ALL) {
+                        R.string.expenses_total_month
+                    } else {
+                        periodFilter.labelRes
+                    },
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = formatMoney(dashboard.monthExpenses),
+                text = if (periodFilter == DateRangeFilter.ALL && categoryFilter == null && merchantFilter == null) {
+                    formatMoney(dashboard.monthExpenses)
+                } else {
+                    formatMoney(filteredTotal)
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error,
@@ -91,6 +115,11 @@ fun ExpensesScreen(
                 selectedCategory = categoryFilter,
                 onCategoryChange = { categoryFilter = it },
                 categories = Categories.expenseCategories,
+                merchants = merchants,
+                selectedMerchant = merchantFilter,
+                onMerchantChange = { merchantFilter = it },
+                periodFilter = periodFilter,
+                onPeriodChange = { periodFilter = it },
             )
             if (filtered.isEmpty()) {
                 Text(
