@@ -144,6 +144,16 @@
     <string name="filter_merchant_label">Comercio</string>
     <string name="filter_no_merchants">Sin comercios</string>
 
+    <string name="prices_title">Comparar precios</string>
+    <string name="prices_search_hint">Buscar un producto (ej. leche)…</string>
+    <string name="prices_empty">Escanea tickets para comparar precios entre comercios.</string>
+    <string name="prices_no_matches">No hay coincidencias para «%1$s».</string>
+    <string name="prices_cheapest">Más barato</string>
+    <string name="prices_priciest">Más caro</string>
+    <string name="prices_latest_purchase">Última compra: %1$s</string>
+    <string name="prices_savings_unit">Ahorro por unidad: %1$s</string>
+    <string name="prices_count_prices">%1$d precios</string>
+
     <string name="export_title">Exportar datos</string>
     <string name="export_snackbar_csv">CSV exportado: %1$s</string>
     <string name="export_snackbar_json">JSON exportado: %1$s</string>

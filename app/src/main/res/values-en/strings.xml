@@ -144,6 +144,16 @@
     <string name="filter_merchant_label">Merchant</string>
     <string name="filter_no_merchants">No merchants</string>
 
+    <string name="prices_title">Compare prices</string>
+    <string name="prices_search_hint">Search a product (e.g. milk)…</string>
+    <string name="prices_empty">Scan receipts to compare prices between merchants.</string>
+    <string name="prices_no_matches">No matches for "%1$s".</string>
+    <string name="prices_cheapest">Cheapest</string>
+    <string name="prices_priciest">Priciest</string>
+    <string name="prices_latest_purchase">Last purchase: %1$s</string>
+    <string name="prices_savings_unit">Savings per unit: %1$s</string>
+    <string name="prices_count_prices">%1$d prices</string>
+
     <string name="export_title">Export data</string>
     <string name="export_snackbar_csv">CSV exported: %1$s</string>
     <string name="export_snackbar_json">JSON exported: %1$s</string>

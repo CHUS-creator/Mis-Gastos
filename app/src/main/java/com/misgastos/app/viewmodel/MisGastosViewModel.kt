@@ -18,12 +18,15 @@ import com.misgastos.app.ocr.ReceiptApiClient
 import com.misgastos.app.ocr.ReceiptApiProvider
 import com.misgastos.app.ocr.ReceiptApiSettings
 import com.misgastos.app.ocr.ReceiptTemplate
+import com.misgastos.app.data.dao.ProductPriceRow
 import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.util.DataExporter
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
 import com.misgastos.app.ocr.ReceiptParser
 import com.misgastos.app.util.DateUtils
+import com.misgastos.app.util.PriceAnalyzer
+import com.misgastos.app.util.ProductComparison
 import com.misgastos.app.util.categoryLabel
 import android.net.Uri
 import java.util.Locale
@@ -105,6 +108,23 @@ class MisGastosViewModel(
         repository.getAllBudgets().stateIn(
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
+
+    val productPrices: StateFlow<List<ProductPriceRow>> =
+        repository.getAllProductPrices().stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
+        )
+
+    private val _priceQuery = MutableStateFlow("")
+    val priceQuery: StateFlow<String> = _priceQuery.asStateFlow()
+
+    val priceComparisons: StateFlow<List<ProductComparison>> =
+        combine(productPrices, priceQuery) { rows, query ->
+            PriceAnalyzer.compare(rows, query)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun setPriceQuery(query: String) {
+        _priceQuery.value = query
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val monthExpensesByCategory: StateFlow<List<CategoryTotal>> =
