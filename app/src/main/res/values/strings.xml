@@ -80,6 +80,17 @@
     <string name="scan_processing_title">Procesando ticket…</string>
     <string name="scan_processing_subtitle">Reconociendo texto con OCR</string>
     <string name="scan_error_recognition">No se pudo reconocer el texto del ticket. Inténtalo de nuevo.</string>
+    <string name="ocr_bench_entry">Banco de pruebas OCR</string>
+    <string name="ocr_bench_title">Banco de pruebas OCR</string>
+    <string name="ocr_bench_pick">Seleccionar fotos de tickets</string>
+    <string name="ocr_bench_progress">Procesando %1$d de %2$d</string>
+    <string name="ocr_bench_share">Compartir texto OCR</string>
+    <string name="ocr_bench_no_merchant">Sin comercio</string>
+    <string name="ocr_bench_no_total">—</string>
+    <string name="ocr_bench_status_ok">Reconocido</string>
+    <string name="ocr_bench_status_error">Error de OCR</string>
+    <string name="ocr_bench_show">Ver texto</string>
+    <string name="ocr_bench_hide">Ocultar texto</string>
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>

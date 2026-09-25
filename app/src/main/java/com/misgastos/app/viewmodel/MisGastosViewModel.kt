@@ -142,6 +142,9 @@ class MisGastosViewModel(
     private val _detailState = MutableStateFlow<TransactionDetail?>(null)
     val detailState: StateFlow<TransactionDetail?> = _detailState.asStateFlow()
 
+    private val _ocrBenchState = MutableStateFlow(OcrBenchState())
+    val ocrBenchState: StateFlow<OcrBenchState> = _ocrBenchState.asStateFlow()
+
     fun addTransaction(
         type: TransactionType,
         amount: Double,
@@ -197,6 +200,37 @@ class MisGastosViewModel(
         merchant.trim().lowercase(Locale.getDefault())
             .replace(Regex("\\s+"), " ")
             .takeIf { it.isNotBlank() }
+
+    fun runOcrBench(uris: List<Uri>) {
+        _ocrBenchState.value = OcrBenchState(running = true, total = uris.size)
+        viewModelScope.launch {
+            val results = uris.mapIndexed { index, uri ->
+                val result = runCatching { ocrRecognizer.recognize(context, uri) }
+                    .fold(
+                        onSuccess = { text ->
+                            OcrBenchResult(
+                                uri = uri,
+                                rawText = text,
+                                parsed = ReceiptParser.parse(text),
+                            )
+                        },
+                        onFailure = { e ->
+                            OcrBenchResult(uri = uri, rawText = "", error = e.message)
+                        },
+                    )
+                _ocrBenchState.value = _ocrBenchState.value.copy(
+                    processed = index + 1,
+                    results = _ocrBenchState.value.results + result,
+                )
+            }
+            _ocrBenchState.value = _ocrBenchState.value.copy(running = false)
+        }
+    }
+
+    fun buildOcrBenchShareText(results: List<OcrBenchResult>): String =
+        results.joinToString("\n\n".plus(SHARE_SEPARATOR).plus("\n\n")) { result ->
+            result.rawText.ifBlank { result.error.orEmpty() }
+        }
 
     fun consumeScanState() {
         _scanState.value = ScanState.Idle
@@ -376,6 +410,22 @@ sealed class ScanState {
     data object Error : ScanState()
     data class Done(val uri: Uri) : ScanState()
 }
+
+data class OcrBenchState(
+    val running: Boolean = false,
+    val processed: Int = 0,
+    val total: Int = 0,
+    val results: List<OcrBenchResult> = emptyList(),
+)
+
+data class OcrBenchResult(
+    val uri: Uri,
+    val rawText: String,
+    val parsed: ParsedReceipt? = null,
+    val error: String? = null,
+)
+
+private const val SHARE_SEPARATOR = "===="
 
 data class EditableLineItem(
     val name: String = "",
