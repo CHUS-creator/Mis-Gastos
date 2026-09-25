@@ -170,12 +170,11 @@ en el mismo PR en que lo detectaste.
 - Fusionado en `main`: consolidación CI (#3).
 - PRs abiertos (todos CI verde al redactarse): #4 filtros de
   periodo/comercio, #5 comparación de precios, #6 importación CSV/JSON,
-  #7 corpus OCR de tickets reales + AGENTS.md.
+  #7 corpus OCR de tickets reales + AGENTS.md, #8 banco de pruebas OCR
+  (lotes de fotos desde galería, OCR ML Kit + parser, compartir texto
+  separado por `====` para ampliar el corpus con ruido de ML Kit).
 - Corpus OCR: 30 tickets (batch 1: 11, batch 2: 19, septiembre 2026).
   Parser: total 29/29 exigibles, fecha 27/27 exigibles, comercio 14/14
   exigibles, líneas dentro de rango en todos los exigibles.
-- Pendiente decidido: pantalla de banco de pruebas para lotes de fotos
-  (OCR + parser sobre N imágenes y compartir el texto) — útil para generar
-  corpus de ML Kit desde la tablet.
 - Pendiente implícito: cobertura del parser para gasolineras/farmacia
   (comercio) y Bershka (líneas de producto).
