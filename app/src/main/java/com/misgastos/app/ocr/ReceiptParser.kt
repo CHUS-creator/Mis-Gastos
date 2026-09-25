@@ -37,8 +37,15 @@ object ReceiptParser {
         "impuesto", "base", "copia", "mastercard", "impresion", "impresión",
         "super reducido", "tfno", "hora", "vendedor", "surt.",
         "producto", "descripcion", "descripción", "precio", "cantidad", "unidad",
-        "fecha", "eur", "pvp",
+        "fecha", "eur", "pvp", "saldo", "euro", "cobrado", "cuenta", "ahorra",
+        "por tu compra",
     )
+
+    private val itemNoiseLines = noiseLines - "eur"
+
+    private val currencyTokenRegex = Regex("\\b(?:EUR|EUP)\\b", RegexOption.IGNORE_CASE)
+
+    private val payKeywords = listOf("importe", "entregado", "cobrado", "tarjeta", "pago", "visa")
 
     private val lineItemRegex = Regex("^(.+?)\\s+(\\d{1,8}[.,]\\d{2})\\s*€?$")
 
@@ -127,6 +134,11 @@ object ReceiptParser {
         return null
     }
 
+    private val mangledDateRegexes = listOf(
+        Regex("(\\d{2})\\s+(\\d{2})[.](\\d{4})"),
+        Regex("(\\d{2})[.](\\d{2})\\s+(\\d{4})"),
+    )
+
     private fun findDate(lines: List<String>, template: ReceiptTemplate?): String? {
         val templateFormat = template?.dateFormat?.takeIf { it.isNotBlank() }
         if (templateFormat != null) {
@@ -138,6 +150,14 @@ object ReceiptParser {
         for (line in lines) {
             for (regex in dateRegexes) {
                 regex.find(line)?.let { return it.value }
+            }
+        }
+        for (line in lines) {
+            for (regex in mangledDateRegexes) {
+                regex.find(line)?.let { m ->
+                    val g = m.groupValues
+                    return "${g[1]}/${g[2]}/${g[3]}"
+                }
             }
         }
         return null
@@ -164,7 +184,7 @@ object ReceiptParser {
             if ((line == line.uppercase(Locale.getDefault())) && (line.length > 25)) continue
             if (line.count { it.isLetter() } < 3) continue
             if (line.first().isDigit()) continue
-            return collapseSpacedLetters(line)
+            return collapseSpacedLetters(line).trim(' ', '#', '*')
         }
         return null
     }
@@ -174,23 +194,31 @@ object ReceiptParser {
 
     private fun findLineItems(lines: List<String>, total: Double?): List<ParsedLineItem> {
         val items = mutableListOf<ParsedLineItem>()
-        for (line in lines) {
+        for (raw in lines) {
+            val line = currencyTokenRegex.replace(raw, " ")
+                .replace(Regex("\\s+"), " ")
+                .trim()
+            if (line.isBlank()) continue
             val lower = line.lowercase(Locale.getDefault())
-            if (noiseLines.any { lower.contains(it) }) continue
+            if (itemNoiseLines.any { lower.contains(it) }) continue
             if (lower.startsWith("total") || lower.startsWith("suma") || lower.startsWith("subtotal")) continue
             val match = lineItemRegex.matchEntire(line)
             if (match != null) {
-                val name = match.groupValues[1].trim()
+                var name = match.groupValues[1].trim()
                 val price = parseAmount(match.groupValues[2]) ?: continue
+                numberRegex.find(name)?.let { name = name.substring(0, it.range.first).trim() }
+                if (name.isBlank()) continue
                 if (price <= 0.0) continue
                 if ((total != null) && (price == total) && (name.length <= 8)) continue
+                if (payKeywords.any { name.lowercase(Locale.getDefault()).startsWith(it) }) continue
                 if (decimalStartRegex.containsMatchIn(name)) continue
                 items.add(ParsedLineItem(name = name, price = price))
             } else {
                 val numbers = numberRegex.findAll(line).toList()
                 if (numbers.size < 2) continue
-                val name = line.substring(0, numbers.first().range.first).trim()
+                var name = line.substring(0, numbers.first().range.first).trim()
                 val price = parseAmount(numbers.last().value) ?: continue
+                numberRegex.find(name)?.let { name = name.substring(0, it.range.first).trim() }
                 if (price <= 0.0) continue
                 if (name.count { it.isLetter() } < 2) continue
                 if ((total != null) && (price == total)) continue

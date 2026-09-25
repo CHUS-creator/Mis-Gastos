@@ -142,12 +142,13 @@ archivo | total | fecha | comercio | num_lineas_producto
   (findMerchant exige ≥3 letras y no empezar por dígito).
 - Bershka: extrae las líneas (formato columnas multi-número), con
   nombres degradados por el OCR; Decathlon aún no (texto "EUR" detrás).
-- Fechas mal OCR-adas (`"04 06.2026"`, `"10.06 2026"`): se documentan con
-  `-` en el manifiesto; el fallback no es fiable.
+- Fechas mal OCR-adas (`"04 06.2026"`, `"10.06 2026"`): `mangledDateRegexes`
+  las repara como ultimo recurso (dd + espacio + MM.yyyy y variantes).
 - Precios con 3 decimales (ferretería `1,750`): `numberRegex` exige 2
   decimales; sin líneas ni total fiable.
-- Tickets con precios en columnas y texto detrás (`98,97 EUR`) o con
-  cantidades delante (`0,466 9,99 4,66`): solo se exige el total.
+- Precios con texto "EUR" detras: se elimina el token de moneda antes de
+  parsear la linea (Decathlon ya extrae lineas). Los nombres de linea se
+  cortan en el primer numero incrustado (quita cantidades/refrids de cola).
 - Restaurantes con `Cantidad Nombre Precio Total` en una línea: se exige
   el mínimo de líneas, el parser puede fusionar.
 - El corpus es de OCR Mistral; falta cobertura de ruido propio de ML Kit
@@ -177,5 +178,5 @@ en el mismo PR en que lo detectaste.
 - Corpus OCR: 30 tickets (batch 1: 11, batch 2: 19, septiembre 2026).
   Parser: total 29/29 exigibles, fecha 27/27 exigibles, comercio 14/14
   exigibles, líneas dentro de rango en todos los exigibles.
-- Pendiente implícito: Decathlon (texto "EUR" tras el precio) y
-  ferretería (precios de 3 decimales sin total).
+- Pendiente implícito: ferretería (precios de 3 decimales sin total) y
+  líneas con `-1` en comercios chinos (Ekomass/Mocasas: nombre "VARIOS").
