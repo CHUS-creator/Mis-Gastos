@@ -13,6 +13,10 @@ import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
+import com.misgastos.app.ocr.ReceiptApiConfig
+import com.misgastos.app.ocr.ReceiptApiClient
+import com.misgastos.app.ocr.ReceiptApiProvider
+import com.misgastos.app.ocr.ReceiptApiSettings
 import com.misgastos.app.ocr.ReceiptTemplate
 import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.util.DataExporter
@@ -171,8 +175,7 @@ class MisGastosViewModel(
         viewModelScope.launch {
             runCatching { ocrRecognizer.recognize(context, uri) }
                 .onSuccess { text ->
-                    val template = lookupTemplate(text)
-                    val parsed = ReceiptParser.parse(text, template)
+                    val parsed = extractReceipt(text)
                     val receipt = EditableReceipt.fromParsed(uri, parsed)
                     val hinted = applyMerchantHint(receipt)
                     _pendingReceipt.value = hinted
@@ -180,6 +183,29 @@ class MisGastosViewModel(
                 }
                 .onFailure { _scanState.value = ScanState.Error }
         }
+    }
+
+    private suspend fun extractReceipt(text: String): ParsedReceipt {
+        val settings = ReceiptApiSettings.load(context)
+        if (settings.provider != ReceiptApiProvider.LOCAL && settings.hasApiKey) {
+            val config = ReceiptApiConfig(
+                provider = settings.provider,
+                apiKey = ReceiptApiSettings.apiKey(context),
+            )
+            val apiResult = runCatching { ReceiptApiClient.extract(config, text) }
+                .getOrNull()
+            if (apiResult != null) {
+                return ParsedReceipt(
+                    merchant = apiResult.merchant,
+                    date = apiResult.date,
+                    total = apiResult.total,
+                    lineItems = apiResult.lineItems,
+                    rawText = text,
+                )
+            }
+        }
+        val template = lookupTemplate(text)
+        return ReceiptParser.parse(text, template)
     }
 
     private suspend fun lookupTemplate(rawText: String): ReceiptTemplate? {

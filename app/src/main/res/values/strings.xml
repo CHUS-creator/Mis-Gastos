@@ -91,6 +91,14 @@
     <string name="ocr_bench_status_error">Error de OCR</string>
     <string name="ocr_bench_show">Ver texto</string>
     <string name="ocr_bench_hide">Ocultar texto</string>
+    <string name="settings_ocr_title">Ajustes de reconocimiento</string>
+    <string name="settings_ocr_provider_hint">Cómo extraer los datos del ticket escaneado. Local es gratis y funciona sin conexión; Gemini y Mistral usan internet y dan mejor resultado.</string>
+    <string name="settings_ocr_provider_local">Local</string>
+    <string name="settings_ocr_api_key">Clave API</string>
+    <string name="settings_ocr_hint_gemini">Consigue una clave gratuita en aistudio.google.com (tier gratuito). Requiere conexión.</string>
+    <string name="settings_ocr_hint_mistral">Consigue una clave en console.mistral.ai (de pago, ~1 céntimo por ticket). Requiere conexión.</string>
+    <string name="settings_ocr_save">Guardar</string>
+    <string name="settings_ocr_saved">Ajustes guardados</string>
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>

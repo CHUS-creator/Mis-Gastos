@@ -91,6 +91,14 @@
     <string name="ocr_bench_status_error">OCR error</string>
     <string name="ocr_bench_show">Show text</string>
     <string name="ocr_bench_hide">Hide text</string>
+    <string name="settings_ocr_title">Recognition settings</string>
+    <string name="settings_ocr_provider_hint">How to extract data from the scanned receipt. Local is free and works offline; Gemini and Mistral need internet and give better results.</string>
+    <string name="settings_ocr_provider_local">Local</string>
+    <string name="settings_ocr_api_key">API key</string>
+    <string name="settings_ocr_hint_gemini">Get a free key at aistudio.google.com (free tier). Requires connection.</string>
+    <string name="settings_ocr_hint_mistral">Get a key at console.mistral.ai (paid, ~1 cent per receipt). Requires connection.</string>
+    <string name="settings_ocr_save">Save</string>
+    <string name="settings_ocr_saved">Settings saved</string>
     <string name="scan_camera_error">Could not start the camera. Check permissions and try again.</string>
 
     <string name="review_title">Review receipt</string>

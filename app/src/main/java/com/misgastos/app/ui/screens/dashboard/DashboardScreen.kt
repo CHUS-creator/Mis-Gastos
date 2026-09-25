@@ -63,6 +63,7 @@ fun DashboardScreen(
     viewModel: MisGastosViewModel,
     onScanClick: () -> Unit = {},
     onTransactionClick: (Long) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     val dashboard by viewModel.dashboard.collectAsState()
     val recent by viewModel.recentTransactions.collectAsState()
@@ -109,6 +110,13 @@ fun DashboardScreen(
                             onClick = {
                                 exportMenu = false
                                 jsonLauncher.launch("misgastos.json")
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.settings_ocr_title)) },
+                            onClick = {
+                                exportMenu = false
+                                onSettingsClick()
                             },
                         )
                     }

@@ -29,6 +29,7 @@ import com.misgastos.app.ui.screens.detail.TransactionDetailScreen
 import com.misgastos.app.ui.screens.expenses.ExpensesScreen
 import com.misgastos.app.ui.screens.income.IncomeScreen
 import com.misgastos.app.ui.screens.scan.OcrBenchScreen
+import com.misgastos.app.ui.screens.settings.OcrSettingsScreen
 import com.misgastos.app.ui.screens.scan.ReviewReceiptScreen
 import com.misgastos.app.ui.screens.scan.ScanCameraScreen
 import com.misgastos.app.ui.screens.scan.ScanEntryScreen
@@ -105,6 +106,7 @@ fun MisGastosNavHost() {
                     viewModel = viewModel,
                     onScanClick = { navController.navigate(Screen.ScanEntry.route) },
                     onTransactionClick = { id -> navController.navigate("detail/$id") },
+                    onSettingsClick = { navController.navigate(Screen.OcrSettings.route) },
                 )
             }
             composable(Screen.Expenses.route) {
@@ -147,6 +149,11 @@ fun MisGastosNavHost() {
             composable(Screen.OcrBench.route) {
                 OcrBenchScreen(
                     viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.OcrSettings.route) {
+                OcrSettingsScreen(
                     onBack = { navController.popBackStack() },
                 )
             }

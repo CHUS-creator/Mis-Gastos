@@ -180,6 +180,12 @@ en el mismo PR en que lo detectaste.
   batch 3: 2 ML Kit del banco de pruebas, septiembre 2026). Parser:
   total 31/31 exigibles, fecha 31/31, comercio 24/24 exigibles, líneas
   dentro de rango en todos los exigibles.
+- Extracción por API opcional (ajustes de reconocimiento, menu del
+  dashboard): Local (heuristicas, por defecto), Gemini (tier gratuito)
+  o Mistral (de pago). Clave API en EncryptedSharedPreferences; sin red
+  o sin clave -> fallback automatico al parser local. Cliente en
+  `ocr/ReceiptApiClient.kt` (HttpURLConnection + org.json en peticiones,
+  parseo de la respuesta con regex propia para tests JVM).
 - Ruido ML Kit (batch 3): bloques separados de descripciones e importes
   (líneas no emparejables sin geometría), dirección antes del logotipo
   (findMerchant prefiere logo corto tras dirección), "TOTAL (€)" separado

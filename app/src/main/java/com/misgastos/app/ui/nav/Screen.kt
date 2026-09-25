@@ -21,6 +21,7 @@ sealed class Screen(val route: String, @StringRes val labelRes: Int, val icon: I
     data object ScanCamera : Screen("scan_camera", R.string.scan_camera, Icons.Filled.CameraAlt)
     data object Review : Screen("review", R.string.review_title, Icons.Filled.CameraAlt)
     data object OcrBench : Screen("ocr_bench", R.string.ocr_bench_title, Icons.Filled.CameraAlt)
+    data object OcrSettings : Screen("ocr_settings", R.string.settings_ocr_title, Icons.Filled.CameraAlt)
     data class Detail(val transactionId: Long) : Screen("detail/$transactionId", R.string.detail_title, Icons.Filled.CameraAlt) {
         companion object {
             const val route = "detail/{transactionId}"
