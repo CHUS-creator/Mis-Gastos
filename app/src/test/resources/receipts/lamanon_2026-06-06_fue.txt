@@ -1,0 +1,26 @@
+MULTIMARKET IMPRESION
+La Manon FUE
+Aeropuerto de Fuerteventura
+Carretera del matorral SN
+35600, Fuerteventura
+Lagardere Travel Retail S.A.
+CIF: A84911379
+Fra S.A. : 522801-60254
+Ticket No.: 385900
+Fecha: 06.06.2026 10:48
+FUE La Manon TPV1-C/FUE/161/21-A-003-01
+Cajero: FUE Carolina G
+|  Cod | Artículo | Pr | Cnt. | impt  |
+| --- | --- | --- | --- | --- |
+|  374473 | Aericano 8oz | 2,40 | x1 | 2,40  |
+|  374467 | Café con leche 8oz | 2,10 | x1 | 2,10  |
+|  374495 | Extra Leche Infusion | 0,50 | x1 | 0,50  |
+Total EUP 5,00
+MASTERCARD 5,00
+|  Neto | IGIC percent | IGIC | Total  |
+| --- | --- | --- | --- |
+|  0,67 | 7.00% | 0,33 | 5,00  |
+Tran. #:60254
+Total artículos ticket 3
+TRACIAS POR SU VISITA
+SOLICITUD FACTURAS ESCANEANDO ESTE QR
