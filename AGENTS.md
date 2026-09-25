@@ -176,8 +176,13 @@ en el mismo PR en que lo detectaste.
   #7 corpus OCR de tickets reales + AGENTS.md, #8 banco de pruebas OCR
   (lotes de fotos desde galería, OCR ML Kit + parser, compartir texto
   separado por `====` para ampliar el corpus con ruido de ML Kit).
-- Corpus OCR: 30 tickets (batch 1: 11, batch 2: 19, septiembre 2026).
-  Parser: total 29/29 exigibles, fecha 27/27 exigibles, comercio 14/14
-  exigibles, líneas dentro de rango en todos los exigibles.
+- Corpus OCR: 32 tickets (batch 1: 11 Mistral, batch 2: 19 Mistral,
+  batch 3: 2 ML Kit del banco de pruebas, septiembre 2026). Parser:
+  total 31/31 exigibles, fecha 31/31, comercio 24/24 exigibles, líneas
+  dentro de rango en todos los exigibles.
+- Ruido ML Kit (batch 3): bloques separados de descripciones e importes
+  (líneas no emparejables sin geometría), dirección antes del logotipo
+  (findMerchant prefiere logo corto tras dirección), "TOTAL (€)" separado
+  de su importe (búsqueda de total en dos pasadas), keyword "a pagar".
 - Pendiente implícito: ferretería (precios de 3 decimales sin total) y
   líneas con `-1` en comercios chinos (Ekomass/Mocasas: nombre "VARIOS").

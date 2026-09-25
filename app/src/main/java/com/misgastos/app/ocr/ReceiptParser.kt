@@ -6,7 +6,7 @@ import java.util.Locale
 object ReceiptParser {
 
     private val genericTotalKeywords = listOf(
-        "total a pagar", "importe total", "total tarjeta",
+        "total a pagar", "a pagar", "importe total", "total tarjeta",
         "total efectivo", "total factura", "total pagado",
         "suma total", "total €", "total a", "total (impuestos incl",
         "total", "importe",
@@ -38,7 +38,7 @@ object ReceiptParser {
         "super reducido", "tfno", "hora", "vendedor", "surt.",
         "producto", "descripcion", "descripción", "precio", "cantidad", "unidad",
         "fecha", "eur", "pvp", "saldo", "euro", "cobrado", "cuenta", "ahorra",
-        "por tu compra",
+        "por tu compra", "comerciante minor", "imp.", "unit",
     )
 
     private val itemNoiseLines = noiseLines - "eur"
@@ -110,23 +110,34 @@ object ReceiptParser {
             findTotalByKeyword(lines, templateKeyword, requireStart = true)?.let { return it }
         }
         for (kw in genericTotalKeywords) {
-            val value = findTotalByKeyword(lines, kw, requireStart = false)
+            val value = findTotalByKeyword(lines, kw, requireStart = false, allowNextLine = false)
+            if (value != null) return value
+        }
+        for (kw in genericTotalKeywords) {
+            val value = findTotalByKeyword(lines, kw, requireStart = false, allowNextLine = true)
             if (value != null) return value
         }
         val allNumbers = lines.mapNotNull { numberRegex.find(it)?.let { m -> parseAmount(m.value) } }
         return allNumbers.maxOrNull()
     }
 
-    private fun findTotalByKeyword(lines: List<String>, keyword: String, requireStart: Boolean): Double? {
+    private fun findTotalByKeyword(
+        lines: List<String>,
+        keyword: String,
+        requireStart: Boolean,
+        allowNextLine: Boolean = true,
+    ): Double? {
         for ((index, line) in lines.withIndex()) {
             val lower = line.lowercase(Locale.getDefault())
             if (lower.contains("subtotal")) continue
             val matches = if (requireStart) lower.startsWith(keyword) else lower.contains(keyword)
             if (matches) {
                 numberRegex.find(line)?.let { return parseAmount(it.value) }
-                lines.getOrNull(index + 1)?.let { next ->
-                    if (numericOnlyRegex.matches(next.trim())) {
-                        numberRegex.find(next)?.let { return parseAmount(it.value) }
+                if (allowNextLine) {
+                    lines.getOrNull(index + 1)?.let { next ->
+                        if (numericOnlyRegex.matches(next.trim())) {
+                            numberRegex.find(next)?.let { return parseAmount(it.value) }
+                        }
                     }
                 }
             }
@@ -176,18 +187,30 @@ object ReceiptParser {
     }
 
     private fun findMerchant(lines: List<String>): String? {
+        val candidates = mutableListOf<String>()
         for (line in lines) {
             val lower = line.lowercase(Locale.getDefault())
             if (noiseLines.any { lower.contains(it) }) continue
+            if (genericTotalKeywords.any { lower.startsWith(it) }) continue
             if (numberRegex.containsMatchIn(line)) continue
             if (line.length !in 3..40) continue
             if ((line == line.uppercase(Locale.getDefault())) && (line.length > 25)) continue
             if (line.count { it.isLetter() } < 3) continue
             if (line.first().isDigit()) continue
-            return collapseSpacedLetters(line)
-                .trim(' ', '#', '*', '.', ',', '-')
+            candidates.add(line)
+            if (candidates.size == 2) break
         }
-        return null
+        val first = candidates.firstOrNull() ?: return null
+        val second = candidates.getOrNull(1)
+        if (second != null) {
+            val f = collapseSpacedLetters(first).trim(' ', '#', '*', '.', ',', '-')
+            val s = collapseSpacedLetters(second).trim(' ', '#', '*', '.', ',', '-')
+            val firstIsAddress = f.contains(Regex("\\d{5}")) || f.lowercase().contains("puerto del")
+            val secondIsLogo = (s == s.uppercase(Locale.getDefault())) && (s.length in 3..10)
+            val firstIsLogo = (f == f.uppercase(Locale.getDefault())) && (f.length in 3..10)
+            if (secondIsLogo && !firstIsLogo && firstIsAddress) return s
+        }
+        return collapseSpacedLetters(first).trim(' ', '#', '*', '.', ',', '-')
     }
 
     private fun collapseSpacedLetters(line: String): String =
