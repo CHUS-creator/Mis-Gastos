@@ -137,10 +137,11 @@ archivo | total | fecha | comercio | num_lineas_producto
 
 ### Limitaciones conocidas del parser (actualizar)
 
-- Gasolineras (Moeve) y farmacias: comercio no deducible por heurísticas
-  (cabecera "DATOS METROLOGICOS", nombre largo en mayúsculas).
-- Bershka: precio en columnas en mitad de línea (`TSP IMP UD PRECIO`),
-  no se extraen líneas de producto.
+- Gasolineras (Moeve) y algunas farmacias: comercio no deducible por
+  heurísticas (cabecera "DATOS METROLOGICOS"); otras farmacias sí
+  (findMerchant exige ≥3 letras y no empezar por dígito).
+- Bershka: extrae las líneas (formato columnas multi-número), con
+  nombres degradados por el OCR; Decathlon aún no (texto "EUR" detrás).
 - Fechas mal OCR-adas (`"04 06.2026"`, `"10.06 2026"`): se documentan con
   `-` en el manifiesto; el fallback no es fiable.
 - Precios con 3 decimales (ferretería `1,750`): `numberRegex` exige 2
@@ -176,5 +177,5 @@ en el mismo PR en que lo detectaste.
 - Corpus OCR: 30 tickets (batch 1: 11, batch 2: 19, septiembre 2026).
   Parser: total 29/29 exigibles, fecha 27/27 exigibles, comercio 14/14
   exigibles, líneas dentro de rango en todos los exigibles.
-- Pendiente implícito: cobertura del parser para gasolineras/farmacia
-  (comercio) y Bershka (líneas de producto).
+- Pendiente implícito: Decathlon (texto "EUR" tras el precio) y
+  ferretería (precios de 3 decimales sin total).

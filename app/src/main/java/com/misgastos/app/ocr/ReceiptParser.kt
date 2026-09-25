@@ -35,7 +35,9 @@ object ReceiptParser {
         "cambio", "entregado", "entrega", "devolución", "devolucion", "vuelto", "vuelta", "apto", "operación",
         "nº op", "aut.", "autoriz", "referencia", "lote", "desc.",
         "impuesto", "base", "copia", "mastercard", "impresion", "impresión",
-        "super reducido",
+        "super reducido", "tfno", "hora", "vendedor", "surt.",
+        "producto", "descripcion", "descripción", "precio", "cantidad", "unidad",
+        "fecha", "eur", "pvp",
     )
 
     private val lineItemRegex = Regex("^(.+?)\\s+(\\d{1,8}[.,]\\d{2})\\s*€?$")
@@ -160,6 +162,8 @@ object ReceiptParser {
             if (numberRegex.containsMatchIn(line)) continue
             if (line.length !in 3..40) continue
             if ((line == line.uppercase(Locale.getDefault())) && (line.length > 25)) continue
+            if (line.count { it.isLetter() } < 3) continue
+            if (line.first().isDigit()) continue
             return collapseSpacedLetters(line)
         }
         return null
@@ -173,14 +177,25 @@ object ReceiptParser {
         for (line in lines) {
             val lower = line.lowercase(Locale.getDefault())
             if (noiseLines.any { lower.contains(it) }) continue
-            val match = lineItemRegex.matchEntire(line) ?: continue
-            val name = match.groupValues[1].trim()
-            val price = parseAmount(match.groupValues[2]) ?: continue
-            if (price <= 0.0) continue
-            if ((total != null) && (price == total) && (name.length <= 8)) continue
             if (lower.startsWith("total") || lower.startsWith("suma") || lower.startsWith("subtotal")) continue
-            if (decimalStartRegex.containsMatchIn(name)) continue
-            items.add(ParsedLineItem(name = name, price = price))
+            val match = lineItemRegex.matchEntire(line)
+            if (match != null) {
+                val name = match.groupValues[1].trim()
+                val price = parseAmount(match.groupValues[2]) ?: continue
+                if (price <= 0.0) continue
+                if ((total != null) && (price == total) && (name.length <= 8)) continue
+                if (decimalStartRegex.containsMatchIn(name)) continue
+                items.add(ParsedLineItem(name = name, price = price))
+            } else {
+                val numbers = numberRegex.findAll(line).toList()
+                if (numbers.size < 2) continue
+                val name = line.substring(0, numbers.first().range.first).trim()
+                val price = parseAmount(numbers.last().value) ?: continue
+                if (price <= 0.0) continue
+                if (name.count { it.isLetter() } < 2) continue
+                if ((total != null) && (price == total)) continue
+                items.add(ParsedLineItem(name = name, price = price))
+            }
         }
         return items
     }
