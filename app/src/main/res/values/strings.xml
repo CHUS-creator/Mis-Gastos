@@ -173,7 +173,8 @@
     <string name="export_column_merchant">Comercio</string>
     <string name="export_column_source">Origen</string>
 
-    <string name="cat_food">Comida</string>    <string name="cat_transport">Transporte</string>
+    <string name="cat_food">Comida</string>
+    <string name="cat_groceries">Supermercado</string>    <string name="cat_transport">Transporte</string>
     <string name="cat_housing">Vivienda</string>
     <string name="cat_leisure">Ocio</string>
     <string name="cat_health">Salud</string>

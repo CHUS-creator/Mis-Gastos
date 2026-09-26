@@ -295,12 +295,13 @@ class MisGastosViewModel(
     ) {
         viewModelScope.launch {
             val amount = receipt.total
+            val date = DateUtils.parseDate(receipt.dateText) ?: receipt.dateTimestamp
             val transaction = Transaction(
                 type = type,
                 amount = amount,
                 category = category,
                 description = receipt.description,
-                date = receipt.dateTimestamp,
+                date = date,
                 merchant = receipt.merchant,
                 source = EntrySource.SCAN,
             )

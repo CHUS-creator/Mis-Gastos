@@ -45,7 +45,8 @@ object ReceiptApiClient {
         Eres un extractor de datos de tickets de compra (recibos) españoles.
         Devuelve SOLO un objeto JSON válido, sin markdown ni explicaciones:
         {"merchant": string|null, "date": string|null, "total": number|null, "lineItems": [{"name": string, "price": number}]}
-        - merchant: nombre del comercio tal como aparece en el ticket.
+        - merchant: nombre del comercio; corrige errores evidentes del OCR
+          (p. ej. "nercadona" -> "MERCADONA, S.A.").
         - date: fecha en formato dd/MM/yyyy (null si no aparece).
         - total: importe final pagado con IVA/IGIC incluido, número con punto decimal.
         - lineItems: líneas de producto con el precio pagado por línea; lista vacía si no hay.

@@ -8,6 +8,7 @@ import com.misgastos.app.R
 
 enum class CategoryKey(val stableValue: String, @StringRes val labelRes: Int) {
     FOOD("Comida", R.string.cat_food),
+    GROCERIES("Supermercado", R.string.cat_groceries),
     TRANSPORT("Transporte", R.string.cat_transport),
     HOUSING("Vivienda", R.string.cat_housing),
     LEISURE("Ocio", R.string.cat_leisure),
