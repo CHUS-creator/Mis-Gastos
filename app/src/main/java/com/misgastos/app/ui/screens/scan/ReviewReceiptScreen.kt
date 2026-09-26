@@ -40,6 +40,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
+import com.misgastos.app.ocr.ReceiptSource
 import com.misgastos.app.ui.components.CategoryDropdown
 import com.misgastos.app.ui.components.formatMoney
 import com.misgastos.app.util.Categories
@@ -66,7 +67,19 @@ fun ReviewReceiptScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.review_title)) },
+                title = {
+                    Column {
+                        Text(stringResource(R.string.review_title))
+                        Text(
+                            text = stringResource(
+                                if (receipt.source == ReceiptSource.API) R.string.review_source_api
+                                else R.string.review_source_local,
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))

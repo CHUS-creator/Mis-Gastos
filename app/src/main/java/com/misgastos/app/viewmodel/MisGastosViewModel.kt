@@ -26,6 +26,7 @@ import com.misgastos.app.util.DataParser
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
 import com.misgastos.app.ocr.ReceiptParser
+import com.misgastos.app.ocr.ReceiptSource
 import com.misgastos.app.util.DateUtils
 import com.misgastos.app.util.PriceAnalyzer
 import com.misgastos.app.util.ProductComparison
@@ -223,6 +224,7 @@ class MisGastosViewModel(
                     total = apiResult.total,
                     lineItems = apiResult.lineItems,
                     rawText = text,
+                    source = ReceiptSource.API,
                 )
             }
         }
@@ -239,9 +241,23 @@ class MisGastosViewModel(
 
     private suspend fun applyMerchantHint(receipt: EditableReceipt): EditableReceipt {
         val merchant = normalizeMerchant(receipt.merchant) ?: return receipt
-        val hint = repository.getMerchantHint(merchant) ?: return receipt
+        val hint = repository.getMerchantHint(merchant)
+            ?: return receipt.copy(suggestedCategory = guessCategory(merchant))
         val key = CategoryKey.fromValue(hint.category) ?: return receipt
         return receipt.copy(suggestedCategory = key)
+    }
+
+    private fun guessCategory(merchant: String): CategoryKey? {
+        val supermarketKeywords = listOf(
+            "mercadona", "lidl", "aldi", "carrefour", "dia", "hiperdino",
+            "spar", "consum", "eroski", "ahorramas", "hipercor", "caprabo",
+            "condis", "bonpreu", "masymas", "supercor", "alcampo", "bm,",
+            "la sirena",
+        )
+        return when {
+            supermarketKeywords.any { merchant.contains(it) } -> CategoryKey.GROCERIES
+            else -> null
+        }
     }
 
     private fun normalizeMerchant(merchant: String): String? =
@@ -549,6 +565,7 @@ data class EditableReceipt(
     val lineItems: List<EditableLineItem> = emptyList(),
     val rawText: String = "",
     val suggestedCategory: CategoryKey? = null,
+    val source: ReceiptSource = ReceiptSource.LOCAL,
 ) {
     companion object {
         fun fromParsed(uri: Uri, parsed: ParsedReceipt): EditableReceipt =
@@ -568,6 +585,7 @@ data class EditableReceipt(
                 },
                 rawText = parsed.rawText,
                 suggestedCategory = null,
+                source = parsed.source,
             )
     }
 }

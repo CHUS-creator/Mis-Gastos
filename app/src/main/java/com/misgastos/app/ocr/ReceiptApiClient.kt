@@ -10,8 +10,12 @@ import java.net.URL
 
 private val merchantFieldRegex = Regex("""\"merchant\"\s*:\s*\"([^\"]*)\"""")
 private val dateFieldRegex = Regex("""\"date\"\s*:\s*\"([^\"]*)\"""")
-private val totalRegex = Regex("""\"total\"\s*:\s*(-?\d+(?:\.\d+)?)""")
-private val lineItemRegex = Regex("""\"name\"\s*:\s*\"([^\"]*)\"\s*,\s*\"price\"\s*:\s*(-?\d+(?:\.\d+)?)""")
+private val totalRegex = Regex("""\"total\"\s*:\s*\"?(-?\d+(?:[.,]\d+)?)\"?""")
+private val lineItemsArrayRegex =
+    Regex("""\"lineItems\"\s*:\s*\[(.*?)]""", RegexOption.DOT_MATCHES_ALL)
+private val lineObjectBodyRegex = Regex("""\{([^{}]*)}""")
+private val lineNameRegex = Regex("""\"name\"\s*:\s*\"([^\"]*)\"""")
+private val linePriceRegex = Regex("""\"price\"\s*:\s*\"?(-?\d+(?:[.,]\d+)?)\"?""")
 private val jsonBlockRegex = Regex("\\{.*}", RegexOption.DOT_MATCHES_ALL)
 
 enum class ReceiptApiProvider {
@@ -170,17 +174,21 @@ object ReceiptApiClient {
         val block = jsonBlockRegex.find(cleaned)?.value
             ?: throw ReceiptApiException("Respuesta no es JSON válido: ${cleaned.take(200)}")
         val items = mutableListOf<ParsedLineItem>()
-        lineItemRegex.findAll(block).forEach { m ->
-            val name = m.groupValues[1].trim()
-            val price = m.groupValues[2].toDoubleOrNull() ?: return@forEach
-            if (name.isNotBlank() && price > 0.0) {
-                items.add(ParsedLineItem(name = name, price = price))
+        lineItemsArrayRegex.find(block)?.groupValues?.get(1)?.let { arrayContent ->
+            lineObjectBodyRegex.findAll(arrayContent).forEach { m ->
+                val obj = m.groupValues[1]
+                val name = lineNameRegex.find(obj)?.groupValues?.get(1)?.trim().orEmpty()
+                val price = linePriceRegex.find(obj)?.groupValues?.get(1)
+                    ?.replace(',', '.')?.toDoubleOrNull() ?: 0.0
+                if (name.isNotBlank() && price > 0.0) {
+                    items.add(ParsedLineItem(name = name, price = price))
+                }
             }
         }
         return ReceiptApiResult(
             merchant = merchantFieldRegex.find(block)?.groupValues?.get(1)?.trim()?.ifBlank { null },
             date = dateFieldRegex.find(block)?.groupValues?.get(1)?.trim()?.ifBlank { null },
-            total = totalRegex.find(block)?.groupValues?.get(1)?.toDoubleOrNull(),
+            total = totalRegex.find(block)?.groupValues?.get(1)?.replace(',', '.')?.toDoubleOrNull(),
             lineItems = items,
         )
     }

@@ -102,6 +102,8 @@
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>
+    <string name="review_source_api">Extraído con API</string>
+    <string name="review_source_local">Extraído sin conexión</string>
     <string name="review_merchant">Comercio</string>
     <string name="review_date">Fecha del ticket</string>
     <string name="review_line_items">Líneas del ticket</string>

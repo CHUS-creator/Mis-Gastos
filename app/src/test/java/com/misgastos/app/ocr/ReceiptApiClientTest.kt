@@ -59,6 +59,33 @@ class ReceiptApiClientTest {
     }
 
     @Test
+    fun `lineas con campos en orden distinto se parsean`() {
+        val content = """
+            {"merchant": "MERCADONA", "date": "22/09/2026", "total": 20.85,
+             "lineItems": [{"price": 1.25, "name": "AGUA MINERAL"},
+                          {"name": "PAN", "quantity": 2, "price": 1.10}]}
+        """.trimIndent()
+        val result = ReceiptApiClient.parseJson(content)
+        assertEquals(2, result.lineItems.size)
+        assertEquals("AGUA MINERAL", result.lineItems[0].name)
+        assertEquals(1.25, result.lineItems[0].price, 0.001)
+        assertEquals("PAN", result.lineItems[1].name)
+        assertEquals(1.10, result.lineItems[1].price, 0.001)
+    }
+
+    @Test
+    fun `precios como texto con coma se parsean`() {
+        val content = """
+            {"merchant": "ALDI", "total": "14,26",
+             "lineItems": [{"name": "AZUCAR", "price": "0,95"}]}
+        """.trimIndent()
+        val result = ReceiptApiClient.parseJson(content)
+        assertEquals(14.26, result.total!!, 0.001)
+        assertEquals(1, result.lineItems.size)
+        assertEquals(0.95, result.lineItems[0].price, 0.001)
+    }
+
+    @Test
     fun `proveedor local lanza excepcion`() {
         val config = ReceiptApiConfig(provider = ReceiptApiProvider.LOCAL)
         try {
