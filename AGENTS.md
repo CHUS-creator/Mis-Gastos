@@ -155,6 +155,22 @@ archivo | total | fecha | comercio | num_lineas_producto
 - El corpus es de OCR Mistral; falta cobertura de ruido propio de ML Kit
   (pendiente: capturar muestras reales desde la tablet).
 
+## Flujo de dos dispositivos (PC y tablet del usuario)
+
+El usuario trabaja de forma intercambiable entre su PC (Android Studio) y
+su tablet (APK de prueba). Implicaciones:
+
+- **Instalación en tablet**: la APK se descarga del artefacto de la run de CI
+  (`app-debug-apk-<sha>`) y se instala *encima* de la anterior, sin
+  desinstalar. Desde el commit que añadió `config/debug.keystore` todas las
+  APK comparten firma, así que la instalación conserva los datos
+  (transacciones, plantillas por comercio, clave API). Las APK anteriores a
+  ese commit tienen firma efímera y exigían desinstalar (perdiendo datos).
+- **Android Studio en el PC**: si aparece "Invalid Gradle JDK configuration",
+  se resuelve con "Use Embedded JDK (jbr)". No es un problema del proyecto.
+- **No dar al usuario pasos de consola**: su flujo es 100% gráfico (Android
+  Studio en PC, instalador de APK en tablet).
+
 ## Mantenimiento de este fichero
 
 Actualízalo (commit aparte o dentro del PR del hito) cuando:
@@ -192,3 +208,6 @@ en el mismo PR en que lo detectaste.
   de su importe (búsqueda de total en dos pasadas), keyword "a pagar".
 - Pendiente implícito: ferretería (precios de 3 decimales sin total) y
   líneas con `-1` en comercios chinos (Ekomass/Mocasas: nombre "VARIOS").
+- Firma de APK unificada: `config/debug.keystore` (android/android, claves
+  públicas de debug) firmado todas las APK desde `8e6dbe7`+ este cambio,
+  para instalar sin perder datos entre versiones y dispositivos.
