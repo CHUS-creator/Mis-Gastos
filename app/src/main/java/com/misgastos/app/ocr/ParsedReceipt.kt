@@ -10,6 +10,7 @@ data class ParsedReceipt(
     val lineItems: List<ParsedLineItem> = emptyList(),
     val rawText: String = "",
     val source: ReceiptSource = ReceiptSource.LOCAL,
+    val apiError: String? = null,
 )
 
 data class ParsedLineItem(

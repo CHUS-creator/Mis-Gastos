@@ -17,6 +17,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,8 +34,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.misgastos.app.R
+import com.misgastos.app.ocr.ReceiptApiClient
+import com.misgastos.app.ocr.ReceiptApiConfig
 import com.misgastos.app.ocr.ReceiptApiProvider
 import com.misgastos.app.ocr.ReceiptApiSettings
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +50,10 @@ fun OcrSettingsScreen(
     var provider by remember { mutableStateOf(saved.provider) }
     var apiKey by remember { mutableStateOf(ReceiptApiSettings.apiKey(context)) }
     var savedFeedback by remember { mutableStateOf(false) }
+    var testRunning by remember { mutableStateOf(false) }
+    var testOk by remember { mutableStateOf(false) }
+    var testResult by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -123,6 +132,51 @@ fun OcrSettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
+            }
+            if (provider != ReceiptApiProvider.LOCAL) {
+                OutlinedButton(
+                    onClick = {
+                        testRunning = true
+                        testResult = null
+                        scope.launch {
+                            val config = ReceiptApiConfig(provider, apiKey.trim())
+                            val outcome = runCatching {
+                                ReceiptApiClient.extract(
+                                    config,
+                                    "MERCADONA\nAV. EJEMPLO 1\n22/09/2026\nAGUA MINERAL 6X0,29\nTOTAL 1,74",
+                                )
+                            }
+                            testResult = outcome.fold(
+                                onSuccess = { it.total?.let { "" } ?: "" },
+                                onFailure = { it.message ?: context.getString(R.string.ocr_error_unknown) },
+                            )
+                            testOk = outcome.isSuccess
+                            testRunning = false
+                        }
+                    },
+                    enabled = !testRunning && apiKey.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        if (testRunning) stringResource(R.string.settings_ocr_test_running)
+                        else stringResource(R.string.settings_ocr_test)
+                    )
+                }
+                if (testResult != null) {
+                    Text(
+                        text = stringResource(
+                            if (testOk) R.string.settings_ocr_test_ok
+                            else R.string.settings_ocr_test_failed,
+                            testResult ?: "",
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (testOk) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                    )
+                }
             }
         }
     }

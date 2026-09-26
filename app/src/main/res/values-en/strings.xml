@@ -99,6 +99,12 @@
     <string name="settings_ocr_hint_mistral">Get a key at console.mistral.ai (paid, ~1 cent per receipt). Requires connection.</string>
     <string name="settings_ocr_save">Save</string>
     <string name="settings_ocr_saved">Settings saved</string>
+    <string name="settings_ocr_test">Test API</string>
+    <string name="settings_ocr_test_running">Testing…</string>
+    <string name="settings_ocr_test_ok">✅ The API responded correctly</string>
+    <string name="settings_ocr_test_failed">❌ Error: %1$s</string>
+    <string name="review_api_error">⚠️ The API failed, local parser was used: %1$s</string>
+    <string name="ocr_error_unknown">Unknown error</string>
     <string name="scan_camera_error">Could not start the camera. Check permissions and try again.</string>
 
     <string name="review_title">Review receipt</string>

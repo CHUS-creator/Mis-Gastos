@@ -215,8 +215,8 @@ class MisGastosViewModel(
                 provider = settings.provider,
                 apiKey = ReceiptApiSettings.apiKey(context),
             )
-            val apiResult = runCatching { ReceiptApiClient.extract(config, text) }
-                .getOrNull()
+            val apiOutcome = runCatching { ReceiptApiClient.extract(config, text) }
+            val apiResult = apiOutcome.getOrNull()
             if (apiResult != null) {
                 return ParsedReceipt(
                     merchant = apiResult.merchant,
@@ -228,6 +228,11 @@ class MisGastosViewModel(
                     source = ReceiptSource.API,
                 )
             }
+            val local = ReceiptParser.parse(text, lookupTemplate(text))
+            return local.copy(
+                apiError = apiOutcome.exceptionOrNull()?.message
+                    ?: context.getString(R.string.ocr_error_unknown),
+            )
         }
         val template = lookupTemplate(text)
         return ReceiptParser.parse(text, template)
@@ -568,6 +573,7 @@ data class EditableReceipt(
     val rawText: String = "",
     val suggestedCategory: CategoryKey? = null,
     val source: ReceiptSource = ReceiptSource.LOCAL,
+    val apiError: String? = null,
 ) {
     companion object {
         fun fromParsed(uri: Uri, parsed: ParsedReceipt): EditableReceipt =
@@ -578,6 +584,7 @@ data class EditableReceipt(
                 dateTimestamp = System.currentTimeMillis(),
                 total = parsed.total ?: 0.0,
                 description = parsed.address.orEmpty(),
+                apiError = parsed.apiError,
                 lineItems = parsed.lineItems.map {
                     EditableLineItem(
                         name = it.name,

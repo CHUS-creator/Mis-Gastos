@@ -107,6 +107,14 @@ fun ReviewReceiptScreen(
                     .height(220.dp),
             )
 
+            if (receipt.apiError != null) {
+                Text(
+                    text = stringResource(R.string.review_api_error, receipt.apiError ?: ""),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
             OutlinedTextField(
                 value = receipt.merchant,
                 onValueChange = { viewModel.updatePendingReceipt(receipt.copy(merchant = it)) },
