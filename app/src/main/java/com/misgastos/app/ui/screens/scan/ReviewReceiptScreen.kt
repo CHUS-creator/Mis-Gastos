@@ -116,6 +116,14 @@ fun ReviewReceiptScreen(
             )
 
             OutlinedTextField(
+                value = receipt.description,
+                onValueChange = { viewModel.updatePendingReceipt(receipt.copy(description = it)) },
+                label = { Text(stringResource(R.string.review_address)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
                 value = receipt.dateText,
                 onValueChange = { viewModel.updatePendingReceipt(receipt.copy(dateText = it)) },
                 label = { Text(stringResource(R.string.review_date)) },

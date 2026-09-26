@@ -9,12 +9,15 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 private val merchantFieldRegex = Regex("""\"merchant\"\s*:\s*\"([^\"]*)\"""")
+private val addressFieldRegex = Regex("""\"address\"\s*:\s*\"([^\"]*)\"""")
 private val dateFieldRegex = Regex("""\"date\"\s*:\s*\"([^\"]*)\"""")
 private val totalRegex = Regex("""\"total\"\s*:\s*\"?(-?\d+(?:[.,]\d+)?)\"?""")
 private val lineItemsArrayRegex =
     Regex("""\"lineItems\"\s*:\s*\[(.*?)]""", RegexOption.DOT_MATCHES_ALL)
 private val lineObjectBodyRegex = Regex("""\{([^{}]*)}""")
 private val lineNameRegex = Regex("""\"name\"\s*:\s*\"([^\"]*)\"""")
+private val lineQuantityRegex = Regex("""\"quantity\"\s*:\s*\"?(-?\d+(?:[.,]\d+)?)\"?""")
+private val lineUnitPriceRegex = Regex("""\"unitPrice\"\s*:\s*\"?(-?\d+(?:[.,]\d+)?)\"?""")
 private val linePriceRegex = Regex("""\"price\"\s*:\s*\"?(-?\d+(?:[.,]\d+)?)\"?""")
 private val jsonBlockRegex = Regex("\\{.*}", RegexOption.DOT_MATCHES_ALL)
 
@@ -29,6 +32,7 @@ data class ReceiptApiConfig(
 
 data class ReceiptApiResult(
     val merchant: String?,
+    val address: String?,
     val date: String?,
     val total: Double?,
     val lineItems: List<ParsedLineItem> = emptyList(),
@@ -48,12 +52,23 @@ object ReceiptApiClient {
     private val prompt = """
         Eres un extractor de datos de tickets de compra (recibos) españoles.
         Devuelve SOLO un objeto JSON válido, sin markdown ni explicaciones:
-        {"merchant": string|null, "date": string|null, "total": number|null, "lineItems": [{"name": string, "price": number}]}
+        {"merchant": string|null, "address": string|null, "date": string|null, "total": number|null,
+         "lineItems": [{"name": string, "quantity": number, "unitPrice": number, "price": number}]}
+        El texto proviene de un OCR: puede tener mayúsculas/minúsculas inconsistentes,
+        abreviaturas (C/, AV., CTRA., NIF, TFNO.), comas o puntos como separador decimal
+        y ruido. Sé tolerante y normaliza.
         - merchant: nombre del comercio; corrige errores evidentes del OCR
-          (p. ej. "nercadona" -> "MERCADONA, S.A.").
-        - date: fecha en formato dd/MM/yyyy (null si no aparece).
+          (p. ej. "nercadona" -> "MERCADONA, S.A."). Null si no aparece.
+        - address: dirección del establecimiento tal como aparece en el ticket
+          (p. ej. "CL GRAN CANARIA 6, 35626 ESQUINZO"). Null si no aparece.
+        - date: fecha del ticket en formato dd/MM/yyyy (null si no aparece).
         - total: importe final pagado con IVA/IGIC incluido, número con punto decimal.
-        - lineItems: líneas de producto con el precio pagado por línea; lista vacía si no hay.
+        - lineItems: líneas de producto. Para cada una:
+          - name: descripción del producto, corrigiendo errores evidentes del OCR.
+          - quantity: cantidad comprada (número; por defecto 1 si el ticket no la indica).
+          - unitPrice: precio por unidad con punto decimal.
+          - price: importe total de la línea (quantity x unitPrice) con punto decimal.
+          Lista vacía si el ticket no detalla productos.
         No inventes valores que no aparezcan en el texto.
     """.trimIndent()
 
@@ -178,18 +193,57 @@ object ReceiptApiClient {
             lineObjectBodyRegex.findAll(arrayContent).forEach { m ->
                 val obj = m.groupValues[1]
                 val name = lineNameRegex.find(obj)?.groupValues?.get(1)?.trim().orEmpty()
+                val quantity = lineQuantityRegex.find(obj)?.groupValues?.get(1)
+                    ?.replace(',', '.')?.toDoubleOrNull()
+                val unitPrice = lineUnitPriceRegex.find(obj)?.groupValues?.get(1)
+                    ?.replace(',', '.')?.toDoubleOrNull()
                 val price = linePriceRegex.find(obj)?.groupValues?.get(1)
-                    ?.replace(',', '.')?.toDoubleOrNull() ?: 0.0
-                if (name.isNotBlank() && price > 0.0) {
-                    items.add(ParsedLineItem(name = name, price = price))
-                }
+                    ?.replace(',', '.')?.toDoubleOrNull()
+                val item = buildLineItem(name, quantity, unitPrice, price)
+                if (item != null) items.add(item)
             }
         }
         return ReceiptApiResult(
             merchant = merchantFieldRegex.find(block)?.groupValues?.get(1)?.trim()?.ifBlank { null },
+            address = addressFieldRegex.find(block)?.groupValues?.get(1)?.trim()?.ifBlank { null },
             date = dateFieldRegex.find(block)?.groupValues?.get(1)?.trim()?.ifBlank { null },
             total = totalRegex.find(block)?.groupValues?.get(1)?.replace(',', '.')?.toDoubleOrNull(),
             lineItems = items,
         )
+    }
+
+    private fun buildLineItem(
+        name: String,
+        quantity: Double?,
+        unitPrice: Double?,
+        linePrice: Double?,
+    ): ParsedLineItem? {
+        if (name.isBlank()) return null
+        val qty = quantity?.takeIf { it > 0.0 }
+        val unit = unitPrice?.takeIf { it > 0.0 }
+        val total = linePrice?.takeIf { it > 0.0 }
+        val resolvedQty = qty
+            ?: if (unit != null && total != null && unit > 0.0) (total / unit).takeIf { it > 0.0 } else null
+        val resolvedUnit = unit
+            ?: if (resolvedQty != null && resolvedQty > 0.0) total?.div(resolvedQty) else null
+        val resolvedTotal = total
+            ?: if (unit != null && qty != null) unit * qty else null
+        if (resolvedTotal == null || resolvedTotal <= 0.0) return null
+        return ParsedLineItem(
+            name = name,
+            price = resolvedTotal,
+            quantity = resolvedQty ?: 1.0,
+            unitPrice = resolvedUnit,
+        )
+    }
+
+    internal fun normalizeDate(text: String?): String? {
+        val raw = text?.trim()?.takeIf { it.isNotBlank() } ?: return null
+        val match = Regex("""^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$""").find(raw) ?: return raw
+        val (d, m, y) = match.destructured
+        val day = d.padStart(2, '0')
+        val month = m.padStart(2, '0')
+        val year = if (y.length == 2) "20$y" else y
+        return "$day/$month/$year"
     }
 }

@@ -105,6 +105,7 @@
     <string name="review_source_api">Extracted with API</string>
     <string name="review_source_local">Extracted offline</string>
     <string name="review_merchant">Merchant</string>
+    <string name="review_address">Address</string>
     <string name="review_date">Receipt date</string>
     <string name="review_line_items">Receipt lines</string>
     <string name="review_add_line_item">Add line</string>

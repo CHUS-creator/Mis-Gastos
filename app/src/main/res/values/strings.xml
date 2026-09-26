@@ -105,6 +105,7 @@
     <string name="review_source_api">Extraído con API</string>
     <string name="review_source_local">Extraído sin conexión</string>
     <string name="review_merchant">Comercio</string>
+    <string name="review_address">Dirección</string>
     <string name="review_date">Fecha del ticket</string>
     <string name="review_line_items">Líneas del ticket</string>
     <string name="review_add_line_item">Añadir línea</string>

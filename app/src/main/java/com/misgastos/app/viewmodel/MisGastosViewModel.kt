@@ -222,6 +222,7 @@ class MisGastosViewModel(
                     merchant = apiResult.merchant,
                     date = apiResult.date,
                     total = apiResult.total,
+                    address = apiResult.address,
                     lineItems = apiResult.lineItems,
                     rawText = text,
                     source = ReceiptSource.API,
@@ -548,6 +549,7 @@ data class EditableLineItem(
     val name: String = "",
     val price: Double = 0.0,
     val quantity: Double = 1.0,
+    val unitPrice: Double? = null,
 )
 
 data class TransactionDetail(
@@ -575,12 +577,13 @@ data class EditableReceipt(
                 dateText = parsed.date.orEmpty(),
                 dateTimestamp = System.currentTimeMillis(),
                 total = parsed.total ?: 0.0,
-                description = parsed.merchant.orEmpty(),
+                description = parsed.address.orEmpty(),
                 lineItems = parsed.lineItems.map {
                     EditableLineItem(
                         name = it.name,
                         price = it.price,
                         quantity = it.quantity,
+                        unitPrice = it.unitPrice,
                     )
                 },
                 rawText = parsed.rawText,
