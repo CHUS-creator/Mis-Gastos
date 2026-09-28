@@ -8,6 +8,7 @@ import androidx.security.crypto.MasterKey
 data class OcrSettings(
     val provider: ReceiptApiProvider = ReceiptApiProvider.LOCAL,
     val hasApiKey: Boolean = false,
+    val model: String = "",
 )
 
 object ReceiptApiSettings {
@@ -15,6 +16,7 @@ object ReceiptApiSettings {
     private const val PREFS_NAME = "receipt_api_settings"
     private const val KEY_PROVIDER = "provider"
     private const val KEY_API_KEY = "api_key"
+    private const val KEY_MODEL = "model"
 
     fun prefs(context: Context): SharedPreferences =
         EncryptedSharedPreferences.create(
@@ -35,13 +37,15 @@ object ReceiptApiSettings {
         return OcrSettings(
             provider = provider,
             hasApiKey = prefs.getString(KEY_API_KEY, "").orEmpty().isNotBlank(),
+            model = prefs.getString(KEY_MODEL, "").orEmpty(),
         )
     }
 
-    fun save(context: Context, provider: ReceiptApiProvider, apiKey: String) {
+    fun save(context: Context, provider: ReceiptApiProvider, apiKey: String, model: String = "") {
         prefs(context).edit()
             .putString(KEY_PROVIDER, provider.name)
             .putString(KEY_API_KEY, apiKey.trim())
+            .putString(KEY_MODEL, model.trim())
             .apply()
     }
 
