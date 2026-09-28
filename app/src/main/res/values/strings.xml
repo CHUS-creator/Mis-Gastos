@@ -80,10 +80,38 @@
     <string name="scan_processing_title">Procesando ticket…</string>
     <string name="scan_processing_subtitle">Reconociendo texto con OCR</string>
     <string name="scan_error_recognition">No se pudo reconocer el texto del ticket. Inténtalo de nuevo.</string>
+    <string name="ocr_bench_entry">Banco de pruebas OCR</string>
+    <string name="ocr_bench_title">Banco de pruebas OCR</string>
+    <string name="ocr_bench_pick">Seleccionar fotos de tickets</string>
+    <string name="ocr_bench_progress">Procesando %1$d de %2$d</string>
+    <string name="ocr_bench_share">Compartir texto OCR</string>
+    <string name="ocr_bench_no_merchant">Sin comercio</string>
+    <string name="ocr_bench_no_total">—</string>
+    <string name="ocr_bench_status_ok">Reconocido</string>
+    <string name="ocr_bench_status_error">Error de OCR</string>
+    <string name="ocr_bench_show">Ver texto</string>
+    <string name="ocr_bench_hide">Ocultar texto</string>
+    <string name="settings_ocr_title">Ajustes de reconocimiento</string>
+    <string name="settings_ocr_provider_hint">Cómo extraer los datos del ticket escaneado. Local es gratis y funciona sin conexión; Gemini y Mistral usan internet y dan mejor resultado.</string>
+    <string name="settings_ocr_provider_local">Local</string>
+    <string name="settings_ocr_api_key">Clave API</string>
+    <string name="settings_ocr_hint_gemini">Consigue una clave gratuita en aistudio.google.com (tier gratuito). Requiere conexión.</string>
+    <string name="settings_ocr_hint_mistral">Consigue una clave en console.mistral.ai (de pago, ~1 céntimo por ticket). Requiere conexión.</string>
+    <string name="settings_ocr_save">Guardar</string>
+    <string name="settings_ocr_saved">Ajustes guardados</string>
+    <string name="settings_ocr_test">Probar API</string>
+    <string name="settings_ocr_test_running">Probando…</string>
+    <string name="settings_ocr_test_ok">✅ La API respondió correctamente</string>
+    <string name="settings_ocr_test_failed">❌ Error: %1$s</string>
+    <string name="review_api_error">⚠️ La API falló y se usó el lector local: %1$s</string>
+    <string name="ocr_error_unknown">Error desconocido</string>
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>
+    <string name="review_source_api">Extraído con API</string>
+    <string name="review_source_local">Extraído sin conexión</string>
     <string name="review_merchant">Comercio</string>
+    <string name="review_address">Dirección</string>
     <string name="review_date">Fecha del ticket</string>
     <string name="review_line_items">Líneas del ticket</string>
     <string name="review_add_line_item">Añadir línea</string>
@@ -116,10 +144,34 @@
     <string name="search_no_results">No hay resultados para la búsqueda.</string>
     <string name="filter_category_all">Todas</string>
 
+    <string name="filter_period_all">Acumulado</string>
+    <string name="filter_period_week">Última semana</string>
+    <string name="filter_period_month">Último mes</string>
+    <string name="filter_period_year">Último año</string>
+    <string name="filter_period_label">Periodo</string>
+    <string name="filter_merchant_all">Todos los comercios</string>
+    <string name="filter_merchant_label">Comercio</string>
+    <string name="filter_no_merchants">Sin comercios</string>
+
+    <string name="prices_title">Comparar precios</string>
+    <string name="prices_search_hint">Buscar un producto (ej. leche)…</string>
+    <string name="prices_empty">Escanea tickets para comparar precios entre comercios.</string>
+    <string name="prices_no_matches">No hay coincidencias para «%1$s».</string>
+    <string name="prices_cheapest">Más barato</string>
+    <string name="prices_priciest">Más caro</string>
+    <string name="prices_latest_purchase">Última compra: %1$s</string>
+    <string name="prices_savings_unit">Ahorro por unidad: %1$s</string>
+    <string name="prices_count_prices">%1$d precios</string>
+
     <string name="export_title">Exportar datos</string>
     <string name="export_snackbar_csv">CSV exportado: %1$s</string>
     <string name="export_snackbar_json">JSON exportado: %1$s</string>
     <string name="export_error">No se pudo exportar el archivo.</string>
+    <string name="action_import_csv">Importar CSV…</string>
+    <string name="action_import_json">Importar JSON…</string>
+    <string name="import_success">Importadas %1$d transacciones (%2$d ignoradas).</string>
+    <string name="import_nothing">No se importó nada. %1$s</string>
+    <string name="import_error">No se pudo leer el archivo.</string>
     <string name="export_no_data">No hay transacciones para exportar.</string>
     <string name="export_share_title">Compartir MisGastos</string>
     <string name="export_column_date">Fecha</string>
@@ -130,7 +182,8 @@
     <string name="export_column_merchant">Comercio</string>
     <string name="export_column_source">Origen</string>
 
-    <string name="cat_food">Comida</string>    <string name="cat_transport">Transporte</string>
+    <string name="cat_food">Comida</string>
+    <string name="cat_groceries">Supermercado</string>    <string name="cat_transport">Transporte</string>
     <string name="cat_housing">Vivienda</string>
     <string name="cat_leisure">Ocio</string>
     <string name="cat_health">Salud</string>

@@ -40,6 +40,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.misgastos.app.R
 import com.misgastos.app.data.entity.TransactionType
+import com.misgastos.app.ocr.ReceiptSource
 import com.misgastos.app.ui.components.CategoryDropdown
 import com.misgastos.app.ui.components.formatMoney
 import com.misgastos.app.util.Categories
@@ -66,7 +67,19 @@ fun ReviewReceiptScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.review_title)) },
+                title = {
+                    Column {
+                        Text(stringResource(R.string.review_title))
+                        Text(
+                            text = stringResource(
+                                if (receipt.source == ReceiptSource.API) R.string.review_source_api
+                                else R.string.review_source_local,
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
@@ -94,10 +107,26 @@ fun ReviewReceiptScreen(
                     .height(220.dp),
             )
 
+            if (receipt.apiError != null) {
+                Text(
+                    text = stringResource(R.string.review_api_error, receipt.apiError ?: ""),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
             OutlinedTextField(
                 value = receipt.merchant,
                 onValueChange = { viewModel.updatePendingReceipt(receipt.copy(merchant = it)) },
                 label = { Text(stringResource(R.string.review_merchant)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = receipt.description,
+                onValueChange = { viewModel.updatePendingReceipt(receipt.copy(description = it)) },
+                label = { Text(stringResource(R.string.review_address)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )

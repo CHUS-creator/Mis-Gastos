@@ -13,13 +13,23 @@ import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
+import com.misgastos.app.ocr.ReceiptApiConfig
+import com.misgastos.app.ocr.ReceiptApiClient
+import com.misgastos.app.ocr.ReceiptApiProvider
+import com.misgastos.app.ocr.ReceiptApiSettings
 import com.misgastos.app.ocr.ReceiptTemplate
+import com.misgastos.app.data.dao.ProductPriceRow
 import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.util.DataExporter
+import com.misgastos.app.util.DataFormat
+import com.misgastos.app.util.DataParser
 import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
 import com.misgastos.app.ocr.ReceiptParser
+import com.misgastos.app.ocr.ReceiptSource
 import com.misgastos.app.util.DateUtils
+import com.misgastos.app.util.PriceAnalyzer
+import com.misgastos.app.util.ProductComparison
 import com.misgastos.app.util.categoryLabel
 import android.net.Uri
 import java.util.Locale
@@ -102,6 +112,23 @@ class MisGastosViewModel(
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
         )
 
+    val productPrices: StateFlow<List<ProductPriceRow>> =
+        repository.getAllProductPrices().stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList(),
+        )
+
+    private val _priceQuery = MutableStateFlow("")
+    val priceQuery: StateFlow<String> = _priceQuery.asStateFlow()
+
+    val priceComparisons: StateFlow<List<ProductComparison>> =
+        combine(productPrices, priceQuery) { rows, query ->
+            PriceAnalyzer.compare(rows, query)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun setPriceQuery(query: String) {
+        _priceQuery.value = query
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val monthExpensesByCategory: StateFlow<List<CategoryTotal>> =
         nowFlow.flatMapLatest { now ->
@@ -142,6 +169,9 @@ class MisGastosViewModel(
     private val _detailState = MutableStateFlow<TransactionDetail?>(null)
     val detailState: StateFlow<TransactionDetail?> = _detailState.asStateFlow()
 
+    private val _ocrBenchState = MutableStateFlow(OcrBenchState())
+    val ocrBenchState: StateFlow<OcrBenchState> = _ocrBenchState.asStateFlow()
+
     fun addTransaction(
         type: TransactionType,
         amount: Double,
@@ -168,8 +198,7 @@ class MisGastosViewModel(
         viewModelScope.launch {
             runCatching { ocrRecognizer.recognize(context, uri) }
                 .onSuccess { text ->
-                    val template = lookupTemplate(text)
-                    val parsed = ReceiptParser.parse(text, template)
+                    val parsed = extractReceipt(text)
                     val receipt = EditableReceipt.fromParsed(uri, parsed)
                     val hinted = applyMerchantHint(receipt)
                     _pendingReceipt.value = hinted
@@ -177,6 +206,36 @@ class MisGastosViewModel(
                 }
                 .onFailure { _scanState.value = ScanState.Error }
         }
+    }
+
+    private suspend fun extractReceipt(text: String): ParsedReceipt {
+        val settings = ReceiptApiSettings.load(context)
+        if (settings.provider != ReceiptApiProvider.LOCAL && settings.hasApiKey) {
+            val config = ReceiptApiConfig(
+                provider = settings.provider,
+                apiKey = ReceiptApiSettings.apiKey(context),
+            )
+            val apiOutcome = runCatching { ReceiptApiClient.extract(config, text) }
+            val apiResult = apiOutcome.getOrNull()
+            if (apiResult != null) {
+                return ParsedReceipt(
+                    merchant = apiResult.merchant,
+                    date = apiResult.date,
+                    total = apiResult.total,
+                    address = apiResult.address,
+                    lineItems = apiResult.lineItems,
+                    rawText = text,
+                    source = ReceiptSource.API,
+                )
+            }
+            val local = ReceiptParser.parse(text, lookupTemplate(text))
+            return local.copy(
+                apiError = apiOutcome.exceptionOrNull()?.message
+                    ?: context.getString(R.string.ocr_error_unknown),
+            )
+        }
+        val template = lookupTemplate(text)
+        return ReceiptParser.parse(text, template)
     }
 
     private suspend fun lookupTemplate(rawText: String): ReceiptTemplate? {
@@ -188,15 +247,60 @@ class MisGastosViewModel(
 
     private suspend fun applyMerchantHint(receipt: EditableReceipt): EditableReceipt {
         val merchant = normalizeMerchant(receipt.merchant) ?: return receipt
-        val hint = repository.getMerchantHint(merchant) ?: return receipt
+        val hint = repository.getMerchantHint(merchant)
+            ?: return receipt.copy(suggestedCategory = guessCategory(merchant))
         val key = CategoryKey.fromValue(hint.category) ?: return receipt
         return receipt.copy(suggestedCategory = key)
+    }
+
+    private fun guessCategory(merchant: String): CategoryKey? {
+        val supermarketKeywords = listOf(
+            "mercadona", "lidl", "aldi", "carrefour", "dia", "hiperdino",
+            "spar", "consum", "eroski", "ahorramas", "hipercor", "caprabo",
+            "condis", "bonpreu", "masymas", "supercor", "alcampo", "bm,",
+            "la sirena",
+        )
+        return when {
+            supermarketKeywords.any { merchant.contains(it) } -> CategoryKey.GROCERIES
+            else -> null
+        }
     }
 
     private fun normalizeMerchant(merchant: String): String? =
         merchant.trim().lowercase(Locale.getDefault())
             .replace(Regex("\\s+"), " ")
             .takeIf { it.isNotBlank() }
+
+    fun runOcrBench(uris: List<Uri>) {
+        _ocrBenchState.value = OcrBenchState(running = true, total = uris.size)
+        viewModelScope.launch {
+            val results = uris.mapIndexed { index, uri ->
+                val result = runCatching { ocrRecognizer.recognize(context, uri) }
+                    .fold(
+                        onSuccess = { text ->
+                            OcrBenchResult(
+                                uri = uri,
+                                rawText = text,
+                                parsed = ReceiptParser.parse(text),
+                            )
+                        },
+                        onFailure = { e ->
+                            OcrBenchResult(uri = uri, rawText = "", error = e.message)
+                        },
+                    )
+                _ocrBenchState.value = _ocrBenchState.value.copy(
+                    processed = index + 1,
+                    results = _ocrBenchState.value.results + result,
+                )
+            }
+            _ocrBenchState.value = _ocrBenchState.value.copy(running = false)
+        }
+    }
+
+    fun buildOcrBenchShareText(results: List<OcrBenchResult>): String =
+        results.joinToString("\n\n".plus(SHARE_SEPARATOR).plus("\n\n")) { result ->
+            result.rawText.ifBlank { result.error.orEmpty() }
+        }
 
     fun consumeScanState() {
         _scanState.value = ScanState.Idle
@@ -213,12 +317,13 @@ class MisGastosViewModel(
     ) {
         viewModelScope.launch {
             val amount = receipt.total
+            val date = DateUtils.parseDate(receipt.dateText) ?: receipt.dateTimestamp
             val transaction = Transaction(
                 type = type,
                 amount = amount,
                 category = category,
                 description = receipt.description,
-                date = receipt.dateTimestamp,
+                date = date,
                 merchant = receipt.merchant,
                 source = EntrySource.SCAN,
             )
@@ -304,6 +409,58 @@ class MisGastosViewModel(
 
     enum class ExportFormat { CSV, JSON }
 
+    fun importFromUri(uri: Uri, format: ExportFormat, onResult: (Int, Int) -> Unit) {
+        viewModelScope.launch {
+            val text = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    input.bufferedReader().readText()
+                }
+            }.getOrNull()
+            if (text == null) {
+                _snackbar.value = context.getString(R.string.import_error)
+                onResult(0, 0)
+                return@launch
+            }
+            val bundle = when (format) {
+                ExportFormat.CSV -> DataParser.parseCsv(text)
+                ExportFormat.JSON -> DataParser.parseJson(text)
+            }
+            if (bundle.transactions.isEmpty()) {
+                _snackbar.value = context.getString(
+                    R.string.import_nothing,
+                    bundle.warnings.firstOrNull() ?: "",
+                )
+                onResult(0, 0)
+                return@launch
+            }
+            bundle.transactions.forEach { tx ->
+                val date = DataFormat.parseDate(tx.dateText) ?: System.currentTimeMillis()
+                val source = if (tx.source == EntrySource.SCAN.name) EntrySource.SCAN else EntrySource.MANUAL
+                val defaultCategory = if (tx.type == TransactionType.EXPENSE) {
+                    CategoryKey.OTHER_EXPENSE.stableValue
+                } else {
+                    CategoryKey.OTHER_INCOME.stableValue
+                }
+                val transaction = Transaction(
+                    type = tx.type,
+                    amount = tx.amount,
+                    category = tx.category.ifBlank { defaultCategory },
+                    description = tx.description,
+                    date = date,
+                    merchant = tx.merchant,
+                    source = source,
+                )
+                val items = tx.lineItems
+                    .filter { it.name.isNotBlank() && it.price > 0.0 }
+                    .map { LineItem(name = it.name, price = it.price, quantity = it.quantity) }
+                repository.addTransactionWithItems(transaction, items)
+            }
+            val skipped = bundle.warnings.size
+            _snackbar.value = context.getString(R.string.import_success, bundle.transactions.size, skipped)
+            onResult(bundle.transactions.size, skipped)
+        }
+    }
+
     fun consumeSnackbar() {
         _snackbar.value = null
     }
@@ -377,10 +534,27 @@ sealed class ScanState {
     data class Done(val uri: Uri) : ScanState()
 }
 
+data class OcrBenchState(
+    val running: Boolean = false,
+    val processed: Int = 0,
+    val total: Int = 0,
+    val results: List<OcrBenchResult> = emptyList(),
+)
+
+data class OcrBenchResult(
+    val uri: Uri,
+    val rawText: String,
+    val parsed: ParsedReceipt? = null,
+    val error: String? = null,
+)
+
+private const val SHARE_SEPARATOR = "===="
+
 data class EditableLineItem(
     val name: String = "",
     val price: Double = 0.0,
     val quantity: Double = 1.0,
+    val unitPrice: Double? = null,
 )
 
 data class TransactionDetail(
@@ -398,6 +572,8 @@ data class EditableReceipt(
     val lineItems: List<EditableLineItem> = emptyList(),
     val rawText: String = "",
     val suggestedCategory: CategoryKey? = null,
+    val source: ReceiptSource = ReceiptSource.LOCAL,
+    val apiError: String? = null,
 ) {
     companion object {
         fun fromParsed(uri: Uri, parsed: ParsedReceipt): EditableReceipt =
@@ -407,16 +583,19 @@ data class EditableReceipt(
                 dateText = parsed.date.orEmpty(),
                 dateTimestamp = System.currentTimeMillis(),
                 total = parsed.total ?: 0.0,
-                description = parsed.merchant.orEmpty(),
+                description = parsed.address.orEmpty(),
+                apiError = parsed.apiError,
                 lineItems = parsed.lineItems.map {
                     EditableLineItem(
                         name = it.name,
                         price = it.price,
                         quantity = it.quantity,
+                        unitPrice = it.unitPrice,
                     )
                 },
                 rawText = parsed.rawText,
                 suggestedCategory = null,
+                source = parsed.source,
             )
     }
 }

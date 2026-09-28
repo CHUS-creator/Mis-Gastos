@@ -5,6 +5,7 @@ import com.misgastos.app.data.dao.CategoryTotal
 import com.misgastos.app.data.dao.LineItemDao
 import com.misgastos.app.data.dao.MerchantHintDao
 import com.misgastos.app.data.dao.MerchantTemplateDao
+import com.misgastos.app.data.dao.ProductPriceRow
 import com.misgastos.app.data.dao.TransactionDao
 import com.misgastos.app.data.entity.Budget
 import com.misgastos.app.data.entity.LineItem
@@ -80,6 +81,9 @@ class MisGastosRepository(
 
     suspend fun getLineItemsForTransaction(transactionId: Long): List<LineItem> =
         lineItemDao.getForTransactionOnce(transactionId)
+
+    fun getAllProductPrices(): Flow<List<ProductPriceRow>> =
+        lineItemDao.getAllProductPrices()
 
     suspend fun getMerchantHint(merchant: String): MerchantHint? =
         merchantHintDao.get(merchant)

@@ -63,6 +63,7 @@ fun DashboardScreen(
     viewModel: MisGastosViewModel,
     onScanClick: () -> Unit = {},
     onTransactionClick: (Long) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     val dashboard by viewModel.dashboard.collectAsState()
     val recent by viewModel.recentTransactions.collectAsState()
@@ -84,6 +85,16 @@ fun DashboardScreen(
         if (uri != null) viewModel.exportToUri(uri, MisGastosViewModel.ExportFormat.JSON) { ok ->
             viewModel.showExportResult(context, ok, uri, MisGastosViewModel.ExportFormat.JSON)
         }
+    }
+    val importCsvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.importFromUri(uri, MisGastosViewModel.ExportFormat.CSV) { _, _ -> }
+    }
+    val importJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) viewModel.importFromUri(uri, MisGastosViewModel.ExportFormat.JSON) { _, _ -> }
     }
     Scaffold(
         topBar = {
@@ -109,6 +120,27 @@ fun DashboardScreen(
                             onClick = {
                                 exportMenu = false
                                 jsonLauncher.launch("misgastos.json")
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.settings_ocr_title)) },
+                            onClick = {
+                                exportMenu = false
+                                onSettingsClick()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_import_csv)) },
+                            onClick = {
+                                exportMenu = false
+                                importCsvLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv"))
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_import_json)) },
+                            onClick = {
+                                exportMenu = false
+                                importJsonLauncher.launch(arrayOf("application/json"))
                             },
                         )
                     }

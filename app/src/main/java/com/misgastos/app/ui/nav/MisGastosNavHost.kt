@@ -28,9 +28,12 @@ import com.misgastos.app.ui.screens.dashboard.DashboardScreen
 import com.misgastos.app.ui.screens.detail.TransactionDetailScreen
 import com.misgastos.app.ui.screens.expenses.ExpensesScreen
 import com.misgastos.app.ui.screens.income.IncomeScreen
+import com.misgastos.app.ui.screens.scan.OcrBenchScreen
+import com.misgastos.app.ui.screens.settings.OcrSettingsScreen
 import com.misgastos.app.ui.screens.scan.ReviewReceiptScreen
 import com.misgastos.app.ui.screens.scan.ScanCameraScreen
 import com.misgastos.app.ui.screens.scan.ScanEntryScreen
+import com.misgastos.app.ui.screens.prices.PriceComparisonScreen
 import com.misgastos.app.ui.screens.stats.StatsScreen
 import com.misgastos.app.viewmodel.MisGastosViewModel
 import com.misgastos.app.viewmodel.ScanState
@@ -104,6 +107,7 @@ fun MisGastosNavHost() {
                     viewModel = viewModel,
                     onScanClick = { navController.navigate(Screen.ScanEntry.route) },
                     onTransactionClick = { id -> navController.navigate("detail/$id") },
+                    onSettingsClick = { navController.navigate(Screen.OcrSettings.route) },
                 )
             }
             composable(Screen.Expenses.route) {
@@ -120,10 +124,17 @@ fun MisGastosNavHost() {
             }
             composable(Screen.Budget.route) { BudgetScreen(viewModel) }
             composable(Screen.Stats.route) { StatsScreen(viewModel) }
+            composable(Screen.Prices.route) {
+                PriceComparisonScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable(Screen.ScanEntry.route) {
                 ScanEntryScreen(
                     onCameraGranted = { navController.navigate(Screen.ScanCamera.route) },
                     onImagePicked = { uri -> viewModel.processReceipt(uri) },
+                    onOcrBench = { navController.navigate(Screen.OcrBench.route) },
                     onBack = { navController.popBackStack() },
                 )
             }
@@ -139,6 +150,17 @@ fun MisGastosNavHost() {
                     onSaved = {
                         navController.popBackStack(Screen.Dashboard.route, inclusive = false)
                     },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.OcrBench.route) {
+                OcrBenchScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.OcrSettings.route) {
+                OcrSettingsScreen(
                     onBack = { navController.popBackStack() },
                 )
             }

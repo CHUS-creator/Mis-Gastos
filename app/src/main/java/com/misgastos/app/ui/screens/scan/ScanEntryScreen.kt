@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ import com.misgastos.app.R
 fun ScanEntryScreen(
     onCameraGranted: () -> Unit,
     onImagePicked: (Uri) -> Unit,
+    onOcrBench: () -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -108,6 +110,10 @@ fun ScanEntryScreen(
                 Text(stringResource(R.string.scan_gallery))
             }
 
+            OutlinedButton(onClick = onOcrBench) {
+                Icon(Icons.Filled.Science, contentDescription = null)
+                Text(stringResource(R.string.ocr_bench_entry))
+            }
             if (showRationale && !hasCameraPermission) {
                 Text(
                     text = stringResource(R.string.scan_permission_camera_rationale),

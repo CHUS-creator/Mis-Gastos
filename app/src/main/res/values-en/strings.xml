@@ -80,10 +80,38 @@
     <string name="scan_processing_title">Processing receipt…</string>
     <string name="scan_processing_subtitle">Recognizing text with OCR</string>
     <string name="scan_error_recognition">Could not recognize the receipt text. Please try again.</string>
+    <string name="ocr_bench_entry">OCR test bench</string>
+    <string name="ocr_bench_title">OCR test bench</string>
+    <string name="ocr_bench_pick">Select receipt photos</string>
+    <string name="ocr_bench_progress">Processing %1$d of %2$d</string>
+    <string name="ocr_bench_share">Share OCR text</string>
+    <string name="ocr_bench_no_merchant">No merchant</string>
+    <string name="ocr_bench_no_total">—</string>
+    <string name="ocr_bench_status_ok">Recognized</string>
+    <string name="ocr_bench_status_error">OCR error</string>
+    <string name="ocr_bench_show">Show text</string>
+    <string name="ocr_bench_hide">Hide text</string>
+    <string name="settings_ocr_title">Recognition settings</string>
+    <string name="settings_ocr_provider_hint">How to extract data from the scanned receipt. Local is free and works offline; Gemini and Mistral need internet and give better results.</string>
+    <string name="settings_ocr_provider_local">Local</string>
+    <string name="settings_ocr_api_key">API key</string>
+    <string name="settings_ocr_hint_gemini">Get a free key at aistudio.google.com (free tier). Requires connection.</string>
+    <string name="settings_ocr_hint_mistral">Get a key at console.mistral.ai (paid, ~1 cent per receipt). Requires connection.</string>
+    <string name="settings_ocr_save">Save</string>
+    <string name="settings_ocr_saved">Settings saved</string>
+    <string name="settings_ocr_test">Test API</string>
+    <string name="settings_ocr_test_running">Testing…</string>
+    <string name="settings_ocr_test_ok">✅ The API responded correctly</string>
+    <string name="settings_ocr_test_failed">❌ Error: %1$s</string>
+    <string name="review_api_error">⚠️ The API failed, local parser was used: %1$s</string>
+    <string name="ocr_error_unknown">Unknown error</string>
     <string name="scan_camera_error">Could not start the camera. Check permissions and try again.</string>
 
     <string name="review_title">Review receipt</string>
+    <string name="review_source_api">Extracted with API</string>
+    <string name="review_source_local">Extracted offline</string>
     <string name="review_merchant">Merchant</string>
+    <string name="review_address">Address</string>
     <string name="review_date">Receipt date</string>
     <string name="review_line_items">Receipt lines</string>
     <string name="review_add_line_item">Add line</string>
@@ -116,10 +144,34 @@
     <string name="search_no_results">No results found.</string>
     <string name="filter_category_all">All</string>
 
+    <string name="filter_period_all">All time</string>
+    <string name="filter_period_week">Last week</string>
+    <string name="filter_period_month">Last month</string>
+    <string name="filter_period_year">Last year</string>
+    <string name="filter_period_label">Period</string>
+    <string name="filter_merchant_all">All merchants</string>
+    <string name="filter_merchant_label">Merchant</string>
+    <string name="filter_no_merchants">No merchants</string>
+
+    <string name="prices_title">Compare prices</string>
+    <string name="prices_search_hint">Search a product (e.g. milk)…</string>
+    <string name="prices_empty">Scan receipts to compare prices between merchants.</string>
+    <string name="prices_no_matches">No matches for "%1$s".</string>
+    <string name="prices_cheapest">Cheapest</string>
+    <string name="prices_priciest">Priciest</string>
+    <string name="prices_latest_purchase">Last purchase: %1$s</string>
+    <string name="prices_savings_unit">Savings per unit: %1$s</string>
+    <string name="prices_count_prices">%1$d prices</string>
+
     <string name="export_title">Export data</string>
     <string name="export_snackbar_csv">CSV exported: %1$s</string>
     <string name="export_snackbar_json">JSON exported: %1$s</string>
     <string name="export_error">Could not export the file.</string>
+    <string name="action_import_csv">Import CSV…</string>
+    <string name="action_import_json">Import JSON…</string>
+    <string name="import_success">Imported %1$d transactions (%2$d skipped).</string>
+    <string name="import_nothing">Nothing imported. %1$s</string>
+    <string name="import_error">Could not read the file.</string>
     <string name="export_no_data">No transactions to export.</string>
     <string name="export_share_title">Share MyExpenses</string>
     <string name="export_column_date">Date</string>
@@ -131,6 +183,7 @@
     <string name="export_column_source">Source</string>
 
     <string name="cat_food">Food</string>
+    <string name="cat_groceries">Groceries</string>
     <string name="cat_transport">Transport</string>
     <string name="cat_housing">Housing</string>
     <string name="cat_leisure">Leisure</string>
