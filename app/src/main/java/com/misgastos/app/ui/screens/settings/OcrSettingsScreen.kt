@@ -49,6 +49,7 @@ fun OcrSettingsScreen(
     val saved = remember { ReceiptApiSettings.load(context) }
     var provider by remember { mutableStateOf(saved.provider) }
     var apiKey by remember { mutableStateOf(ReceiptApiSettings.apiKey(context)) }
+    var model by remember { mutableStateOf(saved.model) }
     var savedFeedback by remember { mutableStateOf(false) }
     var testRunning by remember { mutableStateOf(false) }
     var testOk by remember { mutableStateOf(false) }
@@ -106,6 +107,14 @@ fun OcrSettingsScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedTextField(
+                    value = model,
+                    onValueChange = { model = it; savedFeedback = false },
+                    label = { Text(stringResource(R.string.settings_ocr_model)) },
+                    placeholder = { Text(if (provider == ReceiptApiProvider.GEMINI) ReceiptApiClient.GEMINI_MODEL else "mistral-small-latest") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Text(
                     text = stringResource(
                         if (provider == ReceiptApiProvider.GEMINI) {
@@ -119,7 +128,7 @@ fun OcrSettingsScreen(
             }
             Button(
                 onClick = {
-                    ReceiptApiSettings.save(context, provider, apiKey)
+                    ReceiptApiSettings.save(context, provider, apiKey, model)
                     savedFeedback = true
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -139,7 +148,7 @@ fun OcrSettingsScreen(
                         testRunning = true
                         testResult = null
                         scope.launch {
-                            val config = ReceiptApiConfig(provider, apiKey.trim())
+                            val config = ReceiptApiConfig(provider, apiKey.trim(), model.trim())
                             val outcome = runCatching {
                                 ReceiptApiClient.extract(
                                     config,

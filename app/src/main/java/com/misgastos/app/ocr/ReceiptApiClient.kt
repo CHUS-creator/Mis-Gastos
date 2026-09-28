@@ -28,6 +28,7 @@ enum class ReceiptApiProvider {
 data class ReceiptApiConfig(
     val provider: ReceiptApiProvider = ReceiptApiProvider.LOCAL,
     val apiKey: String = "",
+    val model: String = "",
 )
 
 data class ReceiptApiResult(
@@ -45,8 +46,10 @@ object ReceiptApiClient {
     private const val MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
     private const val MISTRAL_MODEL = "mistral-small-latest"
     private const val GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-    private const val GEMINI_MODEL = "gemini-2.0-flash"
+        "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent"
+    private const val GEMINI_MODEL_DEFAULT = "gemini-3.8-flash"
+    private const val MISTRAL_MODEL_DEFAULT = "mistral-small-latest"
+    const val GEMINI_MODEL = GEMINI_MODEL_DEFAULT
     private const val TIMEOUT_MS = 30_000
 
     private val prompt = """
@@ -75,16 +78,16 @@ object ReceiptApiClient {
     suspend fun extract(config: ReceiptApiConfig, rawText: String): ReceiptApiResult =
         withContext(Dispatchers.IO) {
             when (config.provider) {
-                ReceiptApiProvider.MISTRAL -> callMistral(config.apiKey, rawText)
-                ReceiptApiProvider.GEMINI -> callGemini(config.apiKey, rawText)
+                ReceiptApiProvider.MISTRAL -> callMistral(config.apiKey, rawText, config.model.ifBlank { MISTRAL_MODEL_DEFAULT })
+                ReceiptApiProvider.GEMINI -> callGemini(config.apiKey, rawText, config.model.ifBlank { GEMINI_MODEL_DEFAULT })
                 ReceiptApiProvider.LOCAL ->
                     throw ReceiptApiException("Proveedor LOCAL: usar ReceiptParser")
             }
         }
 
-    private fun callMistral(apiKey: String, rawText: String): ReceiptApiResult {
+    private fun callMistral(apiKey: String, rawText: String, model: String): ReceiptApiResult {
         val body = JSONObject()
-            .put("model", MISTRAL_MODEL)
+            .put("model", model)
             .put(
                 "messages",
                 JSONArray()
@@ -102,7 +105,7 @@ object ReceiptApiClient {
         return parseJson(content)
     }
 
-    private fun callGemini(apiKey: String, rawText: String): ReceiptApiResult {
+    private fun callGemini(apiKey: String, rawText: String, model: String): ReceiptApiResult {
         val body = JSONObject()
             .put(
                 "contents",
@@ -120,7 +123,7 @@ object ReceiptApiClient {
                     .put("temperature", 0)
                     .put("responseMimeType", "application/json"),
             )
-        val url = URL("$GEMINI_URL?key=$apiKey")
+        val url = URL(GEMINI_URL.format(model) + "?key=$apiKey")
         val response = post(url, body.toString())
         val content = JSONObject(response)
             .getJSONArray("candidates")

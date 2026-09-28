@@ -214,6 +214,7 @@ class MisGastosViewModel(
             val config = ReceiptApiConfig(
                 provider = settings.provider,
                 apiKey = ReceiptApiSettings.apiKey(context),
+                model = settings.model,
             )
             val apiOutcome = runCatching { ReceiptApiClient.extract(config, text) }
             val apiResult = apiOutcome.getOrNull()
