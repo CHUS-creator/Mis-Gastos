@@ -50,7 +50,9 @@ object ReceiptApiClient {
     private const val GEMINI_MODEL_DEFAULT = "gemini-3.8-flash"
     private const val MISTRAL_MODEL_DEFAULT = "mistral-small-latest"
     const val GEMINI_MODEL = GEMINI_MODEL_DEFAULT
-    private const val TIMEOUT_MS = 30_000
+    private const val TIMEOUT_MS = 60_000
+    private const val RETRY_DELAY_MS = 3_000L
+    private const val MAX_ATTEMPTS = 3
 
     private val prompt = """
         Eres un extractor de datos de tickets de compra (recibos) españoles.
@@ -136,7 +138,21 @@ object ReceiptApiClient {
     }
 
     private fun post(url: String, apiKey: String, payload: String): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+        var lastError: ReceiptApiException? = null
+        repeat(MAX_ATTEMPTS) { attempt ->
+            try {
+                return postOnce(URL(url), apiKey, payload)
+            } catch (e: ReceiptApiException) {
+                if (!e.message.orEmpty().startsWith("HTTP 5")) throw e
+                lastError = e
+            }
+            if (attempt < MAX_ATTEMPTS - 1) Thread.sleep(RETRY_DELAY_MS)
+        }
+        throw lastError!!
+    }
+
+    private fun postOnce(url: URL, apiKey: String, payload: String): String {
+        val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = TIMEOUT_MS
             readTimeout = TIMEOUT_MS
@@ -161,6 +177,20 @@ object ReceiptApiClient {
     }
 
     private fun post(url: URL, payload: String): String {
+        var lastError: ReceiptApiException? = null
+        repeat(MAX_ATTEMPTS) { attempt ->
+            try {
+                return postOnce(url, payload)
+            } catch (e: ReceiptApiException) {
+                if (!e.message.orEmpty().startsWith("HTTP 5")) throw e
+                lastError = e
+            }
+            if (attempt < MAX_ATTEMPTS - 1) Thread.sleep(RETRY_DELAY_MS)
+        }
+        throw lastError!!
+    }
+
+    private fun postOnce(url: URL, payload: String): String {
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = TIMEOUT_MS
