@@ -61,8 +61,10 @@ primor_2026-04-30.txt|34,65|30/04/26|primor|2
 artybelleza_2026-04-30.txt|11,70|30/04/2026|artybelleza|1
 farmacia_2026-04-23.txt|2,51|23/04/26|-|2
 # --- Batch 3: muestras del OCR real de ML Kit (banco de pruebas, sep 2026) ---
-# ML Kit devuelve bloques separados: descripciones e importes en bloques
-# distintos sin relacion temporal fiable; las lineas de producto no son
-# emparejables sin la geometria del OCR (-1). Totales/fechas/comercio si.
-mercadona_2026-09-22_mlkit.txt|20,85|22/09/2026|mercadona|-1
+# mercadona_2026-09-22: foto de tablet procesada con OCR; el parser ahora
+# extrae cantidad prefija ("5 BOCADILLOS") y precio unitario en formato
+# de 3 columnas (Descripcion / P.Unit / Imp). Se exigen las 6 lineas.
+# aldi: ML Kit devuelve bloques separados sin relacion temporal fiable;
+# las lineas de producto no son emparejables sin la geometria del OCR (-1).
+mercadona_2026-09-22_mlkit.txt|20,85|22/09/2026|mercadona|6
 aldi_2026-09-14_mlkit.txt|14,26|14/09/26|aldi|-1
