@@ -157,7 +157,7 @@ fun OcrSettingsScreen(
                             }
                             testResult = outcome.fold(
                                 onSuccess = { it.total?.let { "" } ?: "" },
-                                onFailure = { it.message ?: context.getString(R.string.ocr_error_unknown) },
+                                onFailure = { formatApiError(it) },
                             )
                             testOk = outcome.isSuccess
                             testRunning = false
@@ -189,4 +189,14 @@ fun OcrSettingsScreen(
             }
         }
     }
+}
+
+private fun formatApiError(t: Throwable): String {
+    val message = t.message.orEmpty()
+    if (message.isNotBlank()) return message
+    t.cause?.let { cause ->
+        val causeMessage = cause.message.orEmpty()
+        if (causeMessage.isNotBlank()) return "${cause.javaClass.simpleName}: $causeMessage"
+    }
+    return t.javaClass.simpleName
 }
