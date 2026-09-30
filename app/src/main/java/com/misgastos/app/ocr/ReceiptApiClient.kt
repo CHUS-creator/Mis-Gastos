@@ -45,8 +45,8 @@ object ReceiptApiClient {
     private const val MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
     private const val MISTRAL_MODEL = "mistral-small-latest"
     private const val GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-    private const val GEMINI_MODEL = "gemini-2.0-flash"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
+    private const val GEMINI_MODEL = "gemini-flash-latest"
     private const val TIMEOUT_MS = 30_000
 
     private val prompt = """
