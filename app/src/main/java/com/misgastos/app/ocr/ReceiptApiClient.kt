@@ -48,6 +48,8 @@ object ReceiptApiClient {
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
     private const val GEMINI_MODEL = "gemini-flash-latest"
     private const val TIMEOUT_MS = 30_000
+    private const val MAX_ATTEMPTS = 3
+    private const val RETRY_DELAY_MS = 1_000L
 
     private val prompt = """
         Eres un extractor de datos de tickets de compra (recibos) españoles.
@@ -121,7 +123,7 @@ object ReceiptApiClient {
                     .put("responseMimeType", "application/json"),
             )
         val url = URL("$GEMINI_URL?key=$apiKey")
-        val response = post(url, body.toString())
+        val response = post(url.toString(), null, body.toString())
         val content = JSONObject(response)
             .getJSONArray("candidates")
             .getJSONObject(0)
@@ -132,53 +134,40 @@ object ReceiptApiClient {
         return parseJson(content)
     }
 
-    private fun post(url: String, apiKey: String, payload: String): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            connectTimeout = TIMEOUT_MS
-            readTimeout = TIMEOUT_MS
-            setRequestProperty("Authorization", "Bearer $apiKey")
-            setRequestProperty("Content-Type", "application/json")
-            doOutput = true
-        }
-        try {
-            conn.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
-            val code = conn.responseCode
-            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
-            if (code !in 200..299) {
-                throw ReceiptApiException("HTTP $code: ${text.take(300)}")
+    private fun post(url: String, apiKey: String?, payload: String): String {
+        var lastError: ReceiptApiException? = null
+        repeat(MAX_ATTEMPTS) { attempt ->
+            val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = TIMEOUT_MS
+                readTimeout = TIMEOUT_MS
+                if (apiKey != null) setRequestProperty("Authorization", "Bearer $apiKey")
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true
             }
-            return text
-        } catch (e: IOException) {
-            throw ReceiptApiException("Error de red: ${e.message}", e)
-        } finally {
-            conn.disconnect()
-        }
-    }
-
-    private fun post(url: URL, payload: String): String {
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            connectTimeout = TIMEOUT_MS
-            readTimeout = TIMEOUT_MS
-            setRequestProperty("Content-Type", "application/json")
-            doOutput = true
-        }
-        try {
-            conn.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
-            val code = conn.responseCode
-            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
-            if (code !in 200..299) {
-                throw ReceiptApiException("HTTP $code: ${text.take(300)}")
+            try {
+                conn.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
+                val code = conn.responseCode
+                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
+                if (code in 200..299) return text
+                val error = ReceiptApiException("HTTP $code: ${text.take(300)}")
+                if (code == 503 || code == 429) {
+                    lastError = error
+                    if (attempt < MAX_ATTEMPTS - 1) {
+                        Thread.sleep(RETRY_DELAY_MS * (1L shl attempt))
+                        return@repeat
+                    }
+                } else {
+                    throw error
+                }
+            } catch (e: IOException) {
+                throw ReceiptApiException("Error de red: ${e.message}", e)
+            } finally {
+                conn.disconnect()
             }
-            return text
-        } catch (e: IOException) {
-            throw ReceiptApiException("Error de red: ${e.message}", e)
-        } finally {
-            conn.disconnect()
         }
+        throw lastError ?: ReceiptApiException("HTTP 503: sin respuesta")
     }
 
     internal fun parseJson(content: String): ReceiptApiResult {
