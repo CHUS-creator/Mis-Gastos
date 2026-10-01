@@ -44,9 +44,10 @@ object ReceiptApiClient {
 
     private const val MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
     private const val MISTRAL_MODEL = "mistral-small-latest"
-    private const val GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
-    private const val GEMINI_MODEL = "gemini-flash-latest"
+    private const val GEMINI_BASE_URL =
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+    private const val GEMINI_PRIMARY_MODEL = "gemini-flash-latest"
+    private const val GEMINI_FALLBACK_MODEL = "gemini-flash-lite-latest"
     private const val TIMEOUT_MS = 30_000
     private const val MAX_ATTEMPTS = 3
     private const val RETRY_DELAY_MS = 1_000L
@@ -122,8 +123,15 @@ object ReceiptApiClient {
                     .put("temperature", 0)
                     .put("responseMimeType", "application/json"),
             )
-        val url = URL("$GEMINI_URL?key=$apiKey")
-        val response = post(url.toString(), null, body.toString())
+        val response = try {
+            post("$GEMINI_BASE_URL$GEMINI_PRIMARY_MODEL:generateContent?key=$apiKey", null, body.toString())
+        } catch (e: ReceiptApiException) {
+            if (e.message?.startsWith("HTTP 503") == true) {
+                post("$GEMINI_BASE_URL$GEMINI_FALLBACK_MODEL:generateContent?key=$apiKey", null, body.toString())
+            } else {
+                throw e
+            }
+        }
         val content = JSONObject(response)
             .getJSONArray("candidates")
             .getJSONObject(0)
