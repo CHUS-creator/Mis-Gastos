@@ -158,7 +158,7 @@ class MisGastosViewModel(
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar: StateFlow<String?> = _snackbar.asStateFlow()
 
-    private val ocrRecognizer = OcrRecognizer()
+    private val ocrRecognizer by lazy { OcrRecognizer() }
 
     private val _scanState = MutableStateFlow<ScanState>(ScanState.Idle)
     val scanState: StateFlow<ScanState> = _scanState.asStateFlow()
