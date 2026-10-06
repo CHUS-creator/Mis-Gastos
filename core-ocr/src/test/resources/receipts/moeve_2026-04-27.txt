@@ -1,0 +1,42 @@
+DATOS METROLOGICOS DE TRANSACCION
+|  Surt. | Producto | Periodo (L) | Precio (EUR/L) | Importe (EUR)  |
+| --- | --- | --- | --- | --- |
+|  S03 | Gasolina95 | 13.02 | 1.536 | 20.00  |
+175251 - AREA 62 MATAS BLANCAS, MATAS BLANCAS 35627
+PALMRA
+>>>>>> FACTURA SIMPLIFICADA <<<<
+N:051000426/00038970 NIF:82835452 2/04/2026
+Nuevo Retail Operations, SAU
+P. DE LA CASILLANA 259 A 28046 MADRID
+TRANSACCION DE VENTA
+TOTAL CASILLANA
+0.0 (Ref. 10% - EUR/L) (EUR)
+13.02 025574 03 Gasolina 1.536 20.00
+SUBTOTAL: EUR 20.00
+IGIC 0.0% B.I. EUR 20.00 C. EUR 0.00
+TOTAL IGIC INCLUIDO: EUR 20.00
+Total Glos al tipo de: Gasolina95 424.69 EUR/³
+Reg.Nerc.Madrid.Inno 3498 Gral.
+Libro 2767 Secc.3ª Soc. N.26301, F.22
+>>>> DETALLE DE MEDIOS DE PAGO <<<<
+|  TOTAL A PAGAR: | EUR 20.00  |
+| --- | --- |
+|  CONTADO: | EUR 20.00  |
+|  CONHADO: | EUR 20.00  |
+Descuento ... : EUR -1.300
+IGIC 0 ... : EUR -0.000
+Con... : EUR +1.300
+...
+Por tu compra: 1.30 EUR
+Sardo total en tu cuenta:3.70 EUR
+Beneficio aplicado: GOV
+Beneficio Extra
+- Noeve Estamos contigo
+Corriplan Multienergy
+ahorra haz 3.91 EUR
+Cajero..: 2850
+Recibo..: 0.2.0.64 27/04/2026 09:08:47
+Ref...: 1450000068 TSO...: 0000484575
+175251 - AREA 62 MATAS BLANCAS, MATAS BLANCAS 35627
+PALMRA
+MUCHAS GRACIAS

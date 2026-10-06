@@ -1,0 +1,40 @@
+repsol
+BETANGAS, S.L.
+E.S. BETANGAS, S.L.
+CTRA BETANZOS-MESON DO VENTO, KM 3,3
+15300 - BETANZOS
+Fecha: 06-06-2026
+Hora: 09:46:45
+Turno: 01
+Rem: 06/06-57
+Tipo: TPV
+N. Autor: 836750
+Concesión: 96023
+Nº Operación: 011372
+Venta con tarjeta
+CREDITO PARTICULAR
+***0041 (1)
+AID: A0000000041010
+MASTERCARD CONTACTLESS
+ARC: 00
+PRODUCTO E/L LITROS IMPORTE
+efitec 95 1,629 13,51 22,01
+Total tarjeta: 22,01€
+Total Venta: 22,01€
+OPERACIÓN CONTACTLESS
+VERIFICACIÓN NO NECESARIA
+N. de ticket 261570347294
+GRACIAS POR SU VISITA
+¿Aún no tienes Raylet?
+Descárgate la y disfruta de más ventajas
+pagando con el móvil de una forma
+rápida y cómoda en todas las
+Estaciones de Servicio del Grupo Repsol
+¡Ahora puedes recibir tus tickets por correo!
+Para tu comodidad, te ofrecemos la opción
+de enrolarte en nuestro sistema de ticket Digital.
+Escanea el siguiente QR o entra en
+www.repsol.es/ticketdigital
+y sigue los pasos. ¡Es fácil y rápido!
+17-b758-4aadf8c
+EL CLIENTE
