@@ -229,8 +229,10 @@ class MisGastosViewModel(
                 )
             }
             val local = ReceiptParser.parse(text, lookupTemplate(text))
+            val cause = apiOutcome.exceptionOrNull()
             return local.copy(
-                apiError = apiOutcome.exceptionOrNull()?.message
+                apiError = cause?.message?.ifBlank { cause.javaClass.simpleName }
+                    ?: cause?.javaClass?.simpleName
                     ?: context.getString(R.string.ocr_error_unknown),
             )
         }

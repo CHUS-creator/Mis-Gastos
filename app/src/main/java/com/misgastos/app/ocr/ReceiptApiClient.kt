@@ -94,11 +94,18 @@ object ReceiptApiClient {
             .put("temperature", 0)
             .put("response_format", JSONObject().put("type", "json_object"))
         val response = post(MISTRAL_URL, apiKey, body.toString())
-        val content = JSONObject(response)
-            .getJSONArray("choices")
-            .getJSONObject(0)
-            .getJSONObject("message")
-            .getString("content")
+        val content = try {
+            JSONObject(response)
+                .getJSONArray("choices")
+                .getJSONObject(0)
+                .getJSONObject("message")
+                .getString("content")
+        } catch (e: Exception) {
+            throw ReceiptApiException(
+                "Respuesta inesperada de Mistral: ${response.take(200)}",
+                e,
+            )
+        }
         return parseJson(content)
     }
 
@@ -147,13 +154,29 @@ object ReceiptApiClient {
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
             if (code !in 200..299) {
-                throw ReceiptApiException("HTTP $code: ${text.take(300)}")
+                throw ReceiptApiException(describeHttpError(code, text))
             }
             return text
         } catch (e: IOException) {
-            throw ReceiptApiException("Error de red: ${e.message}", e)
+            throw ReceiptApiException("Error de red: ${e.message ?: e.javaClass.simpleName}", e)
         } finally {
             conn.disconnect()
+        }
+    }
+
+    /** Convierte una respuesta de error HTTP en un mensaje útil para el usuario. */
+    private fun describeHttpError(code: Int, body: String): String {
+        val detail = runCatching {
+            val obj = JSONObject(body)
+            obj.optString("detail").ifBlank { obj.optString("message") }
+        }.getOrDefault("").ifBlank { body.take(200) }
+        return when (code) {
+            401, 403 -> "Clave de API inválida o sin permiso (HTTP $code). Revisa que la clave sea correcta y esté activa. Detalle: $detail"
+            404 -> "Modelo o endpoint no encontrado (HTTP 404). Detalle: $detail"
+            429 -> "Has superado el límite de peticiones o de cuota (HTTP 429). Detalle: $detail"
+            422 -> "Petición rechazada por el servidor (HTTP 422). Detalle: $detail"
+            in 500..599 -> "El proveedor tiene un problema temporal (HTTP $code). Reintenta más tarde. Detalle: $detail"
+            else -> "HTTP $code: $detail"
         }
     }
 
@@ -171,11 +194,11 @@ object ReceiptApiClient {
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
             if (code !in 200..299) {
-                throw ReceiptApiException("HTTP $code: ${text.take(300)}")
+                throw ReceiptApiException(describeHttpError(code, text))
             }
             return text
         } catch (e: IOException) {
-            throw ReceiptApiException("Error de red: ${e.message}", e)
+            throw ReceiptApiException("Error de red: ${e.message ?: e.javaClass.simpleName}", e)
         } finally {
             conn.disconnect()
         }

@@ -147,8 +147,18 @@ fun OcrSettingsScreen(
                                 )
                             }
                             testResult = outcome.fold(
-                                onSuccess = { it.total?.let { "" } ?: "" },
-                                onFailure = { it.message ?: context.getString(R.string.ocr_error_unknown) },
+                                onSuccess = { result ->
+                                    if (result.total != null) {
+                                        "OK: total=${result.total}" +
+                                            (result.merchant?.let { ", comercio=$it" } ?: "")
+                                    } else {
+                                        "La API respondió pero no devolvió datos útiles (revisa el resultado al escanear)"
+                                    }
+                                },
+                                onFailure = {
+                                    it.message?.ifBlank { it.javaClass.simpleName }
+                                        ?: it.javaClass.simpleName
+                                },
                             )
                             testOk = outcome.isSuccess
                             testRunning = false
