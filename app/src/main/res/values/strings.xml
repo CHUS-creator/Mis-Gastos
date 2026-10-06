@@ -104,6 +104,10 @@
     <string name="settings_ocr_test_ok">✅ La API respondió correctamente</string>
     <string name="settings_ocr_test_failed">❌ Error: %1$s</string>
     <string name="review_api_error">⚠️ La API falló y se usó el lector local: %1$s</string>
+    <string name="settings_ocr_show_key">Mostrar clave</string>
+    <string name="settings_ocr_hide_key">Ocultar clave</string>
+    <string name="settings_ocr_key_length">Clave detectada: %1$d caracteres</string>
+    <string name="settings_ocr_key_will_be_cleaned">⚠️ La clave contiene espacios, saltos o comillas; se limpiará al guardar (%1$d caracteres)</string>
     <string name="ocr_error_unknown">Error desconocido</string>
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 

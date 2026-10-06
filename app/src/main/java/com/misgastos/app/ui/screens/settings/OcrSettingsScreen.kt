@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -32,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.misgastos.app.R
 import com.misgastos.app.ocr.ReceiptApiClient
@@ -98,14 +101,48 @@ fun OcrSettingsScreen(
                 )
             }
             if (provider != ReceiptApiProvider.LOCAL) {
+                var showKey by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = apiKey,
                     onValueChange = { apiKey = it; savedFeedback = false },
                     label = { Text(stringResource(R.string.settings_ocr_api_key)) },
                     singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (showKey) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { showKey = !showKey }) {
+                            Icon(
+                                if (showKey) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = if (showKey) {
+                                    stringResource(R.string.settings_ocr_hide_key)
+                                } else {
+                                    stringResource(R.string.settings_ocr_show_key)
+                                },
+                            )
+                        }
+                    },
+                    isError = apiKey.isNotBlank() && ReceiptApiSettings.sanitizeKey(apiKey) != apiKey.trim(),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                val cleanedKey = ReceiptApiSettings.sanitizeKey(apiKey)
+                if (apiKey.isNotBlank()) {
+                    Text(
+                        text = when {
+                            ReceiptApiSettings.sanitizeKey(apiKey) != apiKey.trim() ->
+                                stringResource(R.string.settings_ocr_key_will_be_cleaned, cleanedKey.length)
+                            else -> stringResource(R.string.settings_ocr_key_length, cleanedKey.length)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (ReceiptApiSettings.sanitizeKey(apiKey) != apiKey.trim()) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
                 Text(
                     text = stringResource(
                         if (provider == ReceiptApiProvider.GEMINI) {
@@ -139,7 +176,7 @@ fun OcrSettingsScreen(
                         testRunning = true
                         testResult = null
                         scope.launch {
-                            val config = ReceiptApiConfig(provider, apiKey.trim())
+                            val config = ReceiptApiConfig(provider, ReceiptApiSettings.sanitizeKey(apiKey))
                             val outcome = runCatching {
                                 ReceiptApiClient.extract(
                                     config,
