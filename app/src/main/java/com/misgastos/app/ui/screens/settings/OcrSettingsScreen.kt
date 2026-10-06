@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,12 +35,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.misgastos.app.R
-import com.misgastos.app.ocr.ReceiptApiClient
-import com.misgastos.app.ocr.ReceiptApiConfig
-import com.misgastos.app.ocr.ReceiptApiProvider
+import com.misgastos.app.ocr.OcrService
+import com.misgastos.app.ocr.OcrSettings
 import com.misgastos.app.ocr.ReceiptApiSettings
 import kotlinx.coroutines.launch
 
+private const val SAMPLE_RECEIPT = "MERCADONA\nAV. EJEMPLO 1\n22/09/2026\nAGUA MINERAL 6X0,29\nTOTAL 1,74"
+
+/**
+ * Pantalla de ajustes OCR genérica: los proveedores y sus campos de
+ * configuración se obtienen del configSchema de :core-ocr, de modo que
+ * añadir un proveedor nuevo no requiere tocar esta pantalla.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OcrSettingsScreen(
@@ -47,14 +54,26 @@ fun OcrSettingsScreen(
 ) {
     val context = LocalContext.current
     val saved = remember { ReceiptApiSettings.load(context) }
-    var provider by remember { mutableStateOf(saved.provider) }
-    var apiKey by remember { mutableStateOf(ReceiptApiSettings.apiKey(context)) }
-    var savedFeedback by remember { mutableStateOf(false) }
-    var testRunning by remember { mutableStateOf(false) }
-    var testOk by remember { mutableStateOf(false) }
-    var testResult by remember { mutableStateOf<String?>(null) }
+    val providers = remember { OcrService.providers() }
+    var providerId by rememberSaveable { mutableStateOf(saved.providerId) }
+    // Valores por campo, indexados por ProviderField.id
+    val initialValues = providers.associate { p ->
+        p.id to p.configSchema.associate { field ->
+            field.id to (saved.config[field.id] ?: field.defaultValue)
+        }
+    }
+    var fieldValues by remember { mutableStateOf(initialValues) }
+    var savedFeedback by rememberSaveable { mutableStateOf(false) }
+    var testRunning by rememberSaveable { mutableStateOf(false) }
+    var testOk by rememberSaveable { mutableStateOf(false) }
+    var testResult by rememberSaveable { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     BackHandler(onBack = onBack)
+
+    val provider = providers.firstOrNull { it.id == providerId } ?: providers.first()
+
+    fun currentConfig(): Map<String, String> =
+        fieldValues[provider.id].orEmpty().filterValues { it.isNotBlank() }
 
     Scaffold(
         topBar = {
@@ -81,45 +100,52 @@ fun OcrSettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = provider == ReceiptApiProvider.LOCAL,
-                    onClick = { provider = ReceiptApiProvider.LOCAL },
-                    label = { Text(stringResource(R.string.settings_ocr_provider_local)) },
-                )
-                FilterChip(
-                    selected = provider == ReceiptApiProvider.GEMINI,
-                    onClick = { provider = ReceiptApiProvider.GEMINI },
-                    label = { Text("Gemini") },
-                )
-                FilterChip(
-                    selected = provider == ReceiptApiProvider.MISTRAL,
-                    onClick = { provider = ReceiptApiProvider.MISTRAL },
-                    label = { Text("Mistral") },
-                )
-            }
-            if (provider != ReceiptApiProvider.LOCAL) {
-                OutlinedTextField(
-                    value = apiKey,
-                    onValueChange = { apiKey = it; savedFeedback = false },
-                    label = { Text(stringResource(R.string.settings_ocr_api_key)) },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Text(
-                    text = stringResource(
-                        if (provider == ReceiptApiProvider.GEMINI) {
-                            R.string.settings_ocr_hint_gemini
-                        } else {
-                            R.string.settings_ocr_hint_mistral
+                providers.forEach { p ->
+                    FilterChip(
+                        selected = p.id == providerId,
+                        onClick = {
+                            providerId = p.id
+                            savedFeedback = false
+                            testResult = null
                         },
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
+                        label = { Text(p.displayName) },
+                    )
+                }
+            }
+            // Campos de configuración del proveedor seleccionado
+            provider.configSchema.forEach { field ->
+                val value = fieldValues[provider.id]?.get(field.id).orEmpty()
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { newValue ->
+                        fieldValues = fieldValues.toMutableMap().apply {
+                            put(
+                                provider.id,
+                                (get(provider.id) ?: emptyMap()).toMutableMap().apply {
+                                    put(field.id, newValue)
+                                },
+                            )
+                        }
+                        savedFeedback = false
+                    },
+                    label = {
+                        Text(field.label + if (!field.required) " (opcional)" else "")
+                    },
+                    singleLine = true,
+                    visualTransformation = if (field.secret) PasswordVisualTransformation() else {
+                        androidx.compose.ui.text.input.VisualTransformation.None
+                    },
+                    placeholder = if (field.placeholder.isNotBlank()) {
+                        { Text(field.placeholder) }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
             Button(
                 onClick = {
-                    ReceiptApiSettings.save(context, provider, apiKey)
+                    ReceiptApiSettings.save(context, provider.id, currentConfig())
                     savedFeedback = true
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -133,28 +159,32 @@ fun OcrSettingsScreen(
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            if (provider != ReceiptApiProvider.LOCAL) {
+            if (provider.id != "local") {
                 OutlinedButton(
                     onClick = {
                         testRunning = true
                         testResult = null
                         scope.launch {
-                            val config = ReceiptApiConfig(provider, apiKey.trim())
                             val outcome = runCatching {
-                                ReceiptApiClient.extract(
-                                    config,
-                                    "MERCADONA\nAV. EJEMPLO 1\n22/09/2026\nAGUA MINERAL 6X0,29\nTOTAL 1,74",
+                                OcrService.extract(
+                                    settings = OcrSettings(providerId = provider.id, config = currentConfig()),
+                                    rawText = SAMPLE_RECEIPT,
                                 )
                             }
                             testResult = outcome.fold(
-                                onSuccess = { it.total?.let { "" } ?: "" },
+                                onSuccess = { parsed ->
+                                    if (parsed.source == com.misgastos.app.ocr.ReceiptSource.API) "" else {
+                                        parsed.apiError ?: context.getString(R.string.ocr_error_unknown)
+                                    }
+                                },
                                 onFailure = { it.message ?: context.getString(R.string.ocr_error_unknown) },
                             )
-                            testOk = outcome.isSuccess
+                            testOk = outcome.isSuccess && testResult.isNullOrEmpty()
                             testRunning = false
                         }
                     },
-                    enabled = !testRunning && apiKey.isNotBlank(),
+                    enabled = !testRunning && provider.configSchema
+                        .filter { it.required }.all { currentConfig()[it.id]?.isNotBlank() == true },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(

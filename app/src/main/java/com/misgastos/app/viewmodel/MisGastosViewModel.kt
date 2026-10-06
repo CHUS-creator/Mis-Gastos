@@ -13,9 +13,7 @@ import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
-import com.misgastos.app.ocr.ReceiptApiConfig
-import com.misgastos.app.ocr.ReceiptApiClient
-import com.misgastos.app.ocr.ReceiptApiProvider
+import com.misgastos.app.ocr.OcrService
 import com.misgastos.app.ocr.ReceiptApiSettings
 import com.misgastos.app.ocr.ReceiptTemplate
 import com.misgastos.app.data.dao.ProductPriceRow
@@ -23,10 +21,10 @@ import com.misgastos.app.util.CategoryKey
 import com.misgastos.app.util.DataExporter
 import com.misgastos.app.util.DataFormat
 import com.misgastos.app.util.DataParser
-import com.misgastos.app.ocr.ParsedLineItem
 import com.misgastos.app.ocr.ParsedReceipt
-import com.misgastos.app.ocr.ReceiptParser
 import com.misgastos.app.ocr.ReceiptSource
+import com.misgastos.app.ocr.toParsedReceipt
+import com.misgastos.ocr.parser.ReceiptParser
 import com.misgastos.app.util.DateUtils
 import com.misgastos.app.util.PriceAnalyzer
 import com.misgastos.app.util.ProductComparison
@@ -210,32 +208,12 @@ class MisGastosViewModel(
 
     private suspend fun extractReceipt(text: String): ParsedReceipt {
         val settings = ReceiptApiSettings.load(context)
-        if (settings.provider != ReceiptApiProvider.LOCAL && settings.hasApiKey) {
-            val config = ReceiptApiConfig(
-                provider = settings.provider,
-                apiKey = ReceiptApiSettings.apiKey(context),
-            )
-            val apiOutcome = runCatching { ReceiptApiClient.extract(config, text) }
-            val apiResult = apiOutcome.getOrNull()
-            if (apiResult != null) {
-                return ParsedReceipt(
-                    merchant = apiResult.merchant,
-                    date = apiResult.date,
-                    total = apiResult.total,
-                    address = apiResult.address,
-                    lineItems = apiResult.lineItems,
-                    rawText = text,
-                    source = ReceiptSource.API,
-                )
-            }
-            val local = ReceiptParser.parse(text, lookupTemplate(text))
-            return local.copy(
-                apiError = apiOutcome.exceptionOrNull()?.message
-                    ?: context.getString(R.string.ocr_error_unknown),
-            )
-        }
-        val template = lookupTemplate(text)
-        return ReceiptParser.parse(text, template)
+        return OcrService.extract(
+            settings = settings,
+            rawText = text,
+            template = lookupTemplate(text),
+            fallbackError = context.getString(R.string.ocr_error_unknown),
+        )
     }
 
     private suspend fun lookupTemplate(rawText: String): ReceiptTemplate? {
@@ -281,7 +259,7 @@ class MisGastosViewModel(
                             OcrBenchResult(
                                 uri = uri,
                                 rawText = text,
-                                parsed = ReceiptParser.parse(text),
+                                parsed = ReceiptParser.parse(text).toParsedReceipt(rawText = text),
                             )
                         },
                         onFailure = { e ->
