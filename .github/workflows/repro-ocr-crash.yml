@@ -37,6 +37,14 @@ jobs:
           mkdir -p diag
           { echo "RUN_ID=${{ github.run_id }}"; date; echo "KVM:"; ls -la /dev/kvm || true; echo "ANDROID env:"; env | grep -i android || true; echo "SDK root:"; ls /usr/local/lib/android 2>/dev/null || ls $ANDROID_HOME 2>/dev/null || true; echo "Imágenes instaladas:"; $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed 2>/dev/null || /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --list_installed 2>/dev/null || true; } > diag/entorno.txt 2>&1 || true
 
+      - name: Instalar emulador e imagen de sistema
+        run: |
+          set -x
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --install emulator "system-images;android-34;google_apis;x86_64" > diag/sdk-install.log 2>&1
+          tail -5 diag/sdk-install.log
+          ls "$ANDROID_HOME/system-images/android-34/google_apis/x86_64" || true
+
       - name: Repro en emulador
         uses: reactivecircus/android-emulator-runner@v1
         with:
