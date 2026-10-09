@@ -52,10 +52,20 @@ jobs:
           chmod +x "$EMU" "$ANDROID_HOME/emulator/qemu-img" "$ANDROID_HOME/emulator/mksdcard" 2>/dev/null || true
           chmod +x "$ANDROID_HOME/emulator/qemu/"*/* 2>/dev/null || true
           echo "SCRIPT_STARTED $(date)" > repro/status.txt
-          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n misgastos -k "system-images;android-34;google_apis;x86_64" -d pixel_5 --force < /dev/null || echo "AVD_CREATE_FAIL" >> repro/status.txt
-          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -locale es-ES > repro/qemu.log 2>&1 &
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name misgastos --package "system-images;android-34;google_apis;x86_64" --sdcard 512M --device pixel_5 > diag/avd-create.log 2>&1 || echo "AVD_CREATE_FAIL" >> repro/status.txt
+          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list avd > diag/avd-list.txt 2>&1 || true
+          if grep -q misgastos diag/avd-list.txt; then
+            echo "AVD_LISTED_OK" >> repro/status.txt
+          else
+            echo "AVD_NOT_LISTED" >> repro/status.txt
+            printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name misgastos --package "system-images;android-34;google_apis;x86_64" >> diag/avd-create.log 2>&1 || echo "AVD_CREATE_FAIL_2" >> repro/status.txt
+            "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list avd > diag/avd-list-2.txt 2>&1 || true
+          fi
+          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -memory 3072 -cores 2 -locale es-ES > repro/qemu.log 2>&1 &
           sleep 10
-          adb wait-for-device || echo "ADB_WAIT_FAIL" >> repro/status.txt
+          timeout 180 adb wait-for-device || echo "ADB_WAIT_FAIL" >> repro/status.txt
           BOOTED=no
           for i in $(seq 1 120); do
             boot=$(adb shell getprop sys.boot_completed 2>/dev/null | head -c 1)
