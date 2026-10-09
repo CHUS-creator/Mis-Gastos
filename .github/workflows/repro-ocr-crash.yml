@@ -1,5 +1,9 @@
 name: Repro crash OCR en emulador
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   workflow_dispatch:
   push:
@@ -79,41 +83,59 @@ jobs:
             adb logcat -d > $GITHUB_WORKSPACE/repro/logcat_full.txt
             adb logcat -d -b crash > $GITHUB_WORKSPACE/repro/logcat_crash.txt
 
-      - name: Publicar resultado
+      - name: Subir resultados a la rama repro-ocr-results
         if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -x
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git"
+          git checkout -B repro-ocr-results
+          mkdir -p repro-latest
+          cp repro/*.txt repro-latest/ 2>/dev/null || true
+          cp repro/*.png repro-latest/ 2>/dev/null || true
+          git add repro-latest || true
+          git commit -m "Resultados de la reproducción del crash OCR (commit ${{ github.sha }})" || true
+          git push origin repro-ocr-results --force || true
+
+      - name: Comentar en el PR via API
+        if: always()
         run: |
           {
             echo "## Reproducción del crash OCR en emulador (API 34)"
             echo
-            [ -f repro/status.txt ] && { echo "```"; cat repro/status.txt; echo "```"; echo; }
-            if [ -s repro/logcat_crash.txt ]; then
+            if [ -f repro/status.txt ]; then echo '```'; cat repro/status.txt; echo '```'; echo; fi
+            if [ -f repro/logcat_crash.txt ] && [ -s repro/logcat_crash.txt ]; then
               echo "### Buffer de crash"
               echo
               echo '```'
-              cat repro/logcat_crash.txt
+              tail -80 repro/logcat_crash.txt
               echo '```'
-            else
-              echo "_Sin crash en el buffer de Android._"
+              echo
             fi
-            echo
-            echo "### FATAL EXCEPTION (extraído del logcat completo)"
-            echo
             if [ -f repro/logcat_full.txt ] && grep -q "FATAL EXCEPTION" repro/logcat_full.txt; then
+              echo "### FATAL EXCEPTION"
+              echo
               echo '```'
               awk '/FATAL EXCEPTION/{f=1} f{print; n++} f&&n>120{exit}' repro/logcat_full.txt
               echo '```'
-            else
-              echo "_No hay FATAL EXCEPTION en logcat._"
             fi
-            echo
-            [ -f repro/pid.txt ] && echo "PID antes/después: $(tr '\n' ' ' < repro/pid.txt)"
           } > comentario.md || true
-          cat comentario.md || true
-          if [ "${{ github.event_name }}" = "push" ]; then
-            gh pr comment 12 --repo "$GITHUB_REPOSITORY" --body-file comentario.md || true
-          fi
+          python3 - <<'EOF' || true
+          import json
+          body = open('comentario.md').read()
+          data = json.dumps({'body': body})
+          import urllib.request
+          req = urllib.request.Request(
+              'https://api.github.com/repos/' + __import__('os').environ['GITHUB_REPOSITORY'] + '/issues/12/comments',
+              data=data.encode(), method='POST',
+              headers={'Authorization': 'Bearer ' + __import__('os').environ['GH_TOKEN'],
+                       'Accept': 'application/vnd.github+json',
+                       'Content-Type': 'application/json'})
+          print(urllib.request.urlopen(req).status)
+          EOF
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Subir artefactos
         if: always()
