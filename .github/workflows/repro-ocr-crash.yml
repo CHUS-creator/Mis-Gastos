@@ -46,18 +46,24 @@ jobs:
           mkdir -p repro
           exec > >(tee -a repro/trace.log) 2>&1
           set -x
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          which adb || true
+          EMU="$ANDROID_HOME/emulator/emulator"
+          chmod +x "$EMU" "$ANDROID_HOME/emulator/qemu-img" "$ANDROID_HOME/emulator/mksdcard" 2>/dev/null || true
+          chmod +x "$ANDROID_HOME/emulator/qemu/"*/* 2>/dev/null || true
+          ls -la "$ANDROID_HOME/emulator/" | head -20
           echo "SCRIPT_STARTED $(date)" > repro/status.txt
           "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n misgastos -k "system-images;android-34;google_apis;x86_64" -d pixel_5 --force < /dev/null || echo "AVD_CREATE_FAIL" >> repro/status.txt
-          nohup "$ANDROID_HOME/emulator" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none > repro/qemu.log 2>&1 &
+          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none > repro/qemu.log 2>&1 &
           sleep 10
           adb wait-for-device || echo "ADB_WAIT_FAIL" >> repro/status.txt
           BOOTED=no
           for i in $(seq 1 120); do
-            boot=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            boot=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '')
             if [ "$boot" = "1" ]; then BOOTED=yes; break; fi
             sleep 5
           done
-          echo "BOOTED=$BOOTED" >> repro/status.txt
+          echo "BOOTED=${BOOTED}" >> repro/status.txt
           adb devices -l >> repro/status.txt 2>&1 || true
           if [ "$BOOTED" != "yes" ]; then
             tail -50 repro/qemu.log >> repro/status.txt || true
