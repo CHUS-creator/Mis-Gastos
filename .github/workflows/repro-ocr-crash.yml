@@ -63,7 +63,7 @@ jobs:
             printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name misgastos --package "system-images;android-34;google_apis;x86_64" >> diag/avd-create.log 2>&1 || echo "AVD_CREATE_FAIL_2" >> repro/status.txt
             "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list avd > diag/avd-list-2.txt 2>&1 || true
           fi
-          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -memory 3072 -cores 2 -locale es-ES > repro/qemu.log 2>&1 &
+          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -memory 3072 -cores 2 > repro/qemu.log 2>&1 &
           sleep 10
           timeout 180 adb wait-for-device || echo "ADB_WAIT_FAIL" >> repro/status.txt
           BOOTED=no
