@@ -1,0 +1,22 @@
+repro-latest:
+total 6800
+drwxr-xr-x  2 runner runner    4096 Oct  9 13:08 .
+drwxr-xr-x 13 runner runner    4096 Oct  9 13:08 ..
+-rw-r--r--  1 runner runner  143877 Oct  9 13:08 01_home.png
+-rw-r--r--  1 runner runner  172054 Oct  9 13:08 02_menu.png
+-rw-r--r--  1 runner runner   89206 Oct  9 13:08 03_ocr_settings.png
+-rw-r--r--  1 runner runner  143877 Oct  9 13:08 04_back_home.png
+-rw-r--r--  1 runner runner  151357 Oct  9 13:08 05_fab_menu.png
+-rw-r--r--  1 runner runner   62480 Oct  9 13:08 06_scan.png
+-rw-r--r--  1 runner runner     358 Oct  9 13:08 avd-create.log
+-rw-r--r--  1 runner runner     265 Oct  9 13:08 avd-list.txt
+-rw-r--r--  1 runner runner      64 Oct  9 13:08 info.txt
+-rw-r--r--  1 runner runner       0 Oct  9 13:08 listing.txt
+-rw-r--r--  1 runner runner       0 Oct  9 13:08 logcat_crash.txt
+-rw-r--r--  1 runner runner 6112508 Oct  9 13:08 logcat_full.txt
+-rw-r--r--  1 runner runner    8916 Oct  9 13:08 qemu.log
+-rw-r--r--  1 runner runner   15797 Oct  9 13:08 sdk-install.log
+-rw-r--r--  1 runner runner     440 Oct  9 13:08 status.txt
+-rw-r--r--  1 runner runner     799 Oct  9 13:08 tap.py
+-rw-r--r--  1 runner runner    5107 Oct  9 13:08 trace.log
+-rw-r--r--  1 runner runner    3054 Oct  9 13:08 ui.xml

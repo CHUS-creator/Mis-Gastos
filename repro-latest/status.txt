@@ -1,0 +1,19 @@
+SCRIPT_STARTED Fri Oct  9 13:06:17 UTC 2026
+AVD_LISTED_OK
+BOOTED=yes
+List of devices attached
+emulator-5554          device product:sdk_gphone64_x86_64 model:sdk_gphone64_x86_64 device:emu64xa transport_id:1
+
+Starting: Intent { cmp=com.misgastos.app/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.misgastos.app/.MainActivity
+TotalTime: 4532
+WaitTime: 4547
+Complete
+2325
+2325
+2325
+2325
+0
+SCRIPT_DONE Fri Oct  9 13:08:03 UTC 2026
