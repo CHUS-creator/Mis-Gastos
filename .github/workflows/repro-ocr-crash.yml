@@ -25,82 +25,86 @@ jobs:
 
       - name: KVM
         run: |
-          echo 'KERNEL=="kvm", GROUP=="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger /dev/kvm || true
+          ls -la /dev/kvm || true
 
       - name: Compilar APK debug
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Diagnóstico del entorno SDK
-        run: |
-          mkdir -p diag
-          { echo "RUN_ID=${{ github.run_id }}"; date; echo "KVM:"; ls -la /dev/kvm || true; echo "ANDROID env:"; env | grep -i android || true; echo "SDK root:"; ls /usr/local/lib/android 2>/dev/null || ls $ANDROID_HOME 2>/dev/null || true; echo "Imágenes instaladas:"; $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed 2>/dev/null || /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --list_installed 2>/dev/null || true; } > diag/entorno.txt 2>&1 || true
-
       - name: Instalar emulador e imagen de sistema
         run: |
-          set -x
+          mkdir -p diag
           SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKM" --install emulator "system-images;android-34;google_apis;x86_64" > diag/sdk-install.log 2>&1
-          tail -5 diag/sdk-install.log
-          ls "$ANDROID_HOME/system-images/android-34/google_apis/x86_64" || true
+          ls "$ANDROID_HOME/system-images/android-34/google_apis/x86_64"
 
-      - name: Repro en emulador
-        uses: reactivecircus/android-emulator-runner@v1
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
-          emulator-boot-timeout: 900
-          script: |
-            mkdir -p "$GITHUB_WORKSPACE/repro"
-            echo "SCRIPT_STARTED" >> "$GITHUB_WORKSPACE/repro/status.txt"
-            exec > >(tee -a "$GITHUB_WORKSPACE/repro/script.log") 2>&1
-            set -x
-            adb devices -l || true
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
-            adb logcat -c
-            adb shell am start -W -n com.misgastos.app/.MainActivity
-            sleep 15
-            adb shell pidof com.misgastos.app >> "$GITHUB_WORKSPACE/repro/status.txt" || echo "APP_DEAD_AL_ARRANCAR" >> "$GITHUB_WORKSPACE/repro/status.txt"
-            adb exec-out screencap -p > "$GITHUB_WORKSPACE/repro/01_home.png"
-
-            tap_node() {
-              adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-              adb pull /sdcard/ui.xml "$GITHUB_WORKSPACE/repro/ui.xml" >/dev/null 2>&1
-              python3 - "$1" "$GITHUB_WORKSPACE/repro/ui.xml" <<'PYEOF'
-            import re, sys, subprocess
-            want = sys.argv[1]
-            try:
-                xml = open(sys.argv[2]).read()
-            except Exception:
-                sys.exit(1)
-            for m in re.finditer(r'<node[^>]*>', xml):
-                node = m.group(0)
-                desc = re.search(r'content-desc="([^"]*)"', node)
-                text = re.search(r'text="([^"]*)"', node)
-                if (desc and want in desc.group(1)) or (text and want in text.group(1)):
-                    b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', node)
-                    if b:
-                        x = (int(b.group(1)) + int(b.group(3))) // 2
-                        y = (int(b.group(2)) + int(b.group(4))) // 2
-                        subprocess.run(['adb', 'shell', 'input', 'tap', str(x), str(y)])
-                        sys.exit(0)
-            sys.exit(1)
-            PYEOF
-            }
-
-            if tap_node "Exportar"; then sleep 3; else echo "NO_MENU" >> "$GITHUB_WORKSPACE/repro/status.txt"; fi
-            adb exec-out screencap -p > "$GITHUB_WORKSPACE/repro/02_menu.png"
-            if tap_node "Ajustes de reconocimiento"; then sleep 8; else echo "NO_OCR_ITEM" >> "$GITHUB_WORKSPACE/repro/status.txt"; fi
-            adb exec-out screencap -p > "$GITHUB_WORKSPACE/repro/03_ocr_settings.png"
-            adb shell pidof com.misgastos.app >> "$GITHUB_WORKSPACE/repro/status.txt" || echo "APP_DEAD_EN_AJUSTES" >> "$GITHUB_WORKSPACE/repro/status.txt"
+      - name: Repro en emulador (manual, con trace)
+        timeout-minutes: 20
+        run: |
+          mkdir -p repro
+          exec > >(tee -a repro/trace.log) 2>&1
+          set -x
+          echo "SCRIPT_STARTED $(date)" > repro/status.txt
+          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n misgastos -k "system-images;android-34;google_apis;x86_64" -d pixel_5 --force < /dev/null || echo "AVD_CREATE_FAIL" >> repro/status.txt
+          nohup "$ANDROID_HOME/emulator" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none > repro/qemu.log 2>&1 &
+          sleep 10
+          adb wait-for-device || echo "ADB_WAIT_FAIL" >> repro/status.txt
+          BOOTED=no
+          for i in $(seq 1 120); do
+            boot=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            if [ "$boot" = "1" ]; then BOOTED=yes; break; fi
             sleep 5
-            adb logcat -d > "$GITHUB_WORKSPACE/repro/logcat_full.txt"
-            adb logcat -d -b crash > "$GITHUB_WORKSPACE/repro/logcat_crash.txt"
-            grep -c "FATAL EXCEPTION" "$GITHUB_WORKSPACE/repro/logcat_full.txt" >> "$GITHUB_WORKSPACE/repro/status.txt" || true
+          done
+          echo "BOOTED=$BOOTED" >> repro/status.txt
+          adb devices -l >> repro/status.txt 2>&1 || true
+          if [ "$BOOTED" != "yes" ]; then
+            tail -50 repro/qemu.log >> repro/status.txt || true
+            exit 3
+          fi
+
+          adb install -r app/build/outputs/apk/debug/app-debug.apk || { echo "INSTALL_FAIL" >> repro/status.txt; exit 4; }
+          adb logcat -c || true
+          adb shell am start -W -n com.misgastos.app/.MainActivity >> repro/status.txt 2>&1 || true
+          sleep 15
+          adb shell pidof com.misgastos.app >> repro/status.txt || echo "APP_DEAD_AL_ARRANCAR" >> repro/status.txt
+          adb exec-out screencap -p > repro/01_home.png || true
+
+          tap_node() {
+            adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
+            adb pull /sdcard/ui.xml "$GITHUB_WORKSPACE/repro/ui.xml" >/dev/null 2>&1 || true
+            python3 - "$1" "$GITHUB_WORKSPACE/repro/ui.xml" <<'PYEOF'
+          import re, sys, subprocess
+          want = sys.argv[1]
+          try:
+              xml = open(sys.argv[2]).read()
+          except Exception:
+              sys.exit(1)
+          for m in re.finditer(r'<node[^>]*>', xml):
+              node = m.group(0)
+              desc = re.search(r'content-desc="([^"]*)"', node)
+              text = re.search(r'text="([^"]*)"', node)
+              if (desc and want in desc.group(1)) or (text and want in text.group(1)):
+                  b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', node)
+                  if b:
+                      x = (int(b.group(1)) + int(b.group(3))) // 2
+                      y = (int(b.group(2)) + int(b.group(4))) // 2
+                      subprocess.run(['adb', 'shell', 'input', 'tap', str(x), str(y)])
+                      sys.exit(0)
+          sys.exit(1)
+          PYEOF
+          }
+
+          if tap_node "Exportar"; then sleep 3; else echo "NO_MENU" >> repro/status.txt; fi
+          adb exec-out screencap -p > repro/02_menu.png || true
+          if tap_node "Ajustes de reconocimiento"; then sleep 10; else echo "NO_OCR_ITEM" >> repro/status.txt; fi
+          adb exec-out screencap -p > repro/03_ocr_settings.png || true
+          adb shell pidof com.misgastos.app >> repro/status.txt || echo "APP_DEAD_EN_AJUSTES" >> repro/status.txt
+          sleep 5
+          adb logcat -d > repro/logcat_full.txt || true
+          adb logcat -d -b crash > repro/logcat_crash.txt || true
+          (grep -c "FATAL EXCEPTION" repro/logcat_full.txt || true) >> repro/status.txt
 
       - name: Subir resultados a la rama repro-ocr-results
         if: always()
@@ -137,7 +141,7 @@ jobs:
               awk '/FATAL EXCEPTION/{f=1} f{print; n++} f&&n>120{exit}' repro/logcat_full.txt
               echo '```'
             fi
-            echo; echo "Detalle completo en la rama \`repro-ocr-results\` (repro-latest/)."
+            echo; echo "Detalle completo (trace, logcat, capturas) en la rama \`repro-ocr-results\`."
           } > comentario.md || true
           python3 - <<'PYEOF' || true
           import json, os, urllib.request
