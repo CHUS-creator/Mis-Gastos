@@ -196,7 +196,11 @@ class MisGastosViewModel(
     fun processReceipt(uri: Uri) {
         _scanState.value = ScanState.Processing
         viewModelScope.launch {
-            runCatching { ocrRecognizer.recognize(context, uri) }
+            runCatching { 
+                // Use the optimized recognize function which automatically handles
+                // downsampling and runs on background thread
+                ocrRecognizer.recognize(context, uri) 
+            }
                 .onSuccess { text ->
                     val parsed = extractReceipt(text)
                     val receipt = EditableReceipt.fromParsed(uri, parsed)
@@ -204,7 +208,10 @@ class MisGastosViewModel(
                     _pendingReceipt.value = hinted
                     _scanState.value = ScanState.Done(uri)
                 }
-                .onFailure { _scanState.value = ScanState.Error }
+                .onFailure { e ->
+                    android.util.Log.e("MisGastosViewModel", "OCR processing failed", e)
+                    _scanState.value = ScanState.Error
+                }
         }
     }
 
@@ -275,7 +282,10 @@ class MisGastosViewModel(
         _ocrBenchState.value = OcrBenchState(running = true, total = uris.size)
         viewModelScope.launch {
             val results = uris.mapIndexed { index, uri ->
-                val result = runCatching { ocrRecognizer.recognize(context, uri) }
+                val result = runCatching { 
+                    // OCR processing is already on background thread via the optimized recognize function
+                    ocrRecognizer.recognize(context, uri) 
+                }
                     .fold(
                         onSuccess = { text ->
                             OcrBenchResult(
