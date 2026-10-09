@@ -41,7 +41,7 @@ jobs:
           ls "$ANDROID_HOME/system-images/android-34/google_apis/x86_64"
 
       - name: Repro en emulador (manual, con trace)
-        timeout-minutes: 20
+        timeout-minutes: 25
         run: |
           mkdir -p repro
           exec > >(tee -a repro/trace.log) 2>&1
@@ -51,15 +51,14 @@ jobs:
           EMU="$ANDROID_HOME/emulator/emulator"
           chmod +x "$EMU" "$ANDROID_HOME/emulator/qemu-img" "$ANDROID_HOME/emulator/mksdcard" 2>/dev/null || true
           chmod +x "$ANDROID_HOME/emulator/qemu/"*/* 2>/dev/null || true
-          ls -la "$ANDROID_HOME/emulator/" | head -20
           echo "SCRIPT_STARTED $(date)" > repro/status.txt
           "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n misgastos -k "system-images;android-34;google_apis;x86_64" -d pixel_5 --force < /dev/null || echo "AVD_CREATE_FAIL" >> repro/status.txt
-          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none > repro/qemu.log 2>&1 &
+          nohup "$EMU" -avd misgastos -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -locale es-ES > repro/qemu.log 2>&1 &
           sleep 10
           adb wait-for-device || echo "ADB_WAIT_FAIL" >> repro/status.txt
           BOOTED=no
           for i in $(seq 1 120); do
-            boot=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '')
+            boot=$(adb shell getprop sys.boot_completed 2>/dev/null | head -c 1)
             if [ "$boot" = "1" ]; then BOOTED=yes; break; fi
             sleep 5
           done
@@ -80,18 +79,24 @@ jobs:
           tap_node() {
             adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
             adb pull /sdcard/ui.xml "$GITHUB_WORKSPACE/repro/ui.xml" >/dev/null 2>&1 || true
-            python3 - "$1" "$GITHUB_WORKSPACE/repro/ui.xml" <<'PYEOF'
+            python3 "$GITHUB_WORKSPACE/repro/tap.py" "$GITHUB_WORKSPACE/repro/ui.xml" "$@"
+          }
+          cat > repro/tap.py <<'PYEOF'
           import re, sys, subprocess
-          want = sys.argv[1]
+          xml_path = sys.argv[1]
+          wants = sys.argv[2:]
           try:
-              xml = open(sys.argv[2]).read()
+              xml = open(xml_path, encoding='utf-8', errors='replace').read()
           except Exception:
               sys.exit(1)
           for m in re.finditer(r'<node[^>]*>', xml):
               node = m.group(0)
               desc = re.search(r'content-desc="([^"]*)"', node)
               text = re.search(r'text="([^"]*)"', node)
-              if (desc and want in desc.group(1)) or (text and want in text.group(1)):
+              vals = []
+              if desc: vals.append(desc.group(1))
+              if text: vals.append(text.group(1))
+              if any(w in v for w in wants for v in vals):
                   b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', node)
                   if b:
                       x = (int(b.group(1)) + int(b.group(3))) // 2
@@ -100,17 +105,28 @@ jobs:
                       sys.exit(0)
           sys.exit(1)
           PYEOF
-          }
 
-          if tap_node "Exportar"; then sleep 3; else echo "NO_MENU" >> repro/status.txt; fi
+          if tap_node "Exportar" "Export"; then sleep 3; else echo "NO_MENU_EXPORTAR" >> repro/status.txt; fi
           adb exec-out screencap -p > repro/02_menu.png || true
-          if tap_node "Ajustes de reconocimiento"; then sleep 10; else echo "NO_OCR_ITEM" >> repro/status.txt; fi
+          if tap_node "Ajustes de reconocimiento" "Recognition settings"; then sleep 12; else echo "NO_ITEM_AJUSTES" >> repro/status.txt; fi
           adb exec-out screencap -p > repro/03_ocr_settings.png || true
-          adb shell pidof com.misgastos.app >> repro/status.txt || echo "APP_DEAD_EN_AJUSTES" >> repro/status.txt
+          adb shell pidof com.misgastos.app >> repro/status.txt || echo "APP_DEAD_EN_AJUSTES_OCR" >> repro/status.txt
+
+          adb shell input keyevent KEYCODE_BACK || true
+          sleep 3
+          adb exec-out screencap -p > repro/04_back_home.png || true
+          adb shell pidof com.misgastos.app >> repro/status.txt || echo "APP_DEAD_TRAS_BACK" >> repro/status.txt
+
+          if tap_node "Añadir" "Add"; then sleep 3; else echo "NO_FAB" >> repro/status.txt; fi
+          adb exec-out screencap -p > repro/05_fab_menu.png || true
+          if tap_node "Escanear ticket" "Scan receipt"; then sleep 12; else echo "NO_ITEM_ESCANEAR" >> repro/status.txt; fi
+          adb exec-out screencap -p > repro/06_scan.png || true
+          adb shell pidof com.misgastos.app >> repro/status.txt || echo "APP_DEAD_EN_ESCANEAR" >> repro/status.txt
           sleep 5
           adb logcat -d > repro/logcat_full.txt || true
           adb logcat -d -b crash > repro/logcat_crash.txt || true
           (grep -c "FATAL EXCEPTION" repro/logcat_full.txt || true) >> repro/status.txt
+          echo "SCRIPT_DONE $(date)" >> repro/status.txt
 
       - name: Subir resultados a la rama repro-ocr-results
         if: always()
@@ -147,7 +163,7 @@ jobs:
               awk '/FATAL EXCEPTION/{f=1} f{print; n++} f&&n>120{exit}' repro/logcat_full.txt
               echo '```'
             fi
-            echo; echo "Detalle completo (trace, logcat, capturas) en la rama \`repro-ocr-results\`."
+            echo; echo "Detalle completo (trace, logcat, capturas) en la rama repro-ocr-results."
           } > comentario.md || true
           python3 - <<'PYEOF' || true
           import json, os, urllib.request
