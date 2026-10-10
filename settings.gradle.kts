@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MisGastos"
 include(":app")
+include(":core-ocr")

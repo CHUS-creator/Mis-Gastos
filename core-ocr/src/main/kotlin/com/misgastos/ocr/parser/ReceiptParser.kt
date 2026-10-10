@@ -1,8 +1,16 @@
-package com.misgastos.app.ocr
+package com.misgastos.ocr.parser
 
+import com.misgastos.ocr.api.OcrReceipt
+import com.misgastos.ocr.api.ParsedLineItem
+import com.misgastos.ocr.api.ReceiptTemplate
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * Parser heurístico local: extrae total, fecha, comercio y líneas de producto
+ * del texto OCR de un ticket, sin red ni APIs externas.
+ * Migrado de Mis-Gastos (com.misgastos.app.ocr.ReceiptParser).
+ */
 object ReceiptParser {
 
     private val genericTotalKeywords = listOf(
@@ -51,7 +59,7 @@ object ReceiptParser {
 
     private val spacedLettersRegex = Regex("(?:[A-Za-zÁÉÍÓÚÜÑáéíóúñü] ){2,}[A-Za-zÁÉÍÓÚÜÑáéíóúñü]")
 
-    fun parse(rawText: String, template: ReceiptTemplate? = null): ParsedReceipt {
+    fun parse(rawText: String, template: ReceiptTemplate? = null): OcrReceipt {
         val lines = rawText.lines()
             .map { it.replace("|", " ") }
             .map { it.replace(Regex("\\s+"), " ") }
@@ -63,12 +71,11 @@ object ReceiptParser {
         val merchant = findMerchant(lines)
         val lineItems = findLineItems(lines, total)
 
-        return ParsedReceipt(
+        return OcrReceipt(
             total = total,
             date = date,
             merchant = merchant,
             lineItems = lineItems,
-            rawText = rawText,
         )
     }
 

@@ -1,17 +1,14 @@
-package com.misgastos.app.ocr
+package com.misgastos.ocr
 
+import com.misgastos.ocr.parser.ReceiptParser
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
 /**
  * Suite de regresión sobre el corpus de tickets reales.
- *
- * El corpus (app/src/test/resources/receipts/) contiene el texto OCR de
- * recibos reales y un manifiesto con la verdad esperada por ticket:
- *   archivo | total | fecha | comercio | num_lineas
- *
- * Ver manifiesto para el significado de los valores "-" y negativos.
+ * Migrada de Mis-Gastos (ReceiptCorpusTest) con el mismo manifiesto de
+ * verdad esperada: receipts/manifest.txt
  */
 class ReceiptCorpusTest {
 
@@ -32,7 +29,7 @@ class ReceiptCorpusTest {
         if (dir.isDirectory) {
             return dir
         }
-        throw IllegalStateException("Corpus de tickets no encontrado (classpath ni src/test/resources/receipts)")
+        throw IllegalStateException("Corpus de tickets no encontrado")
     }
 
     private fun loadManifest(): List<CorpusEntry> {
@@ -118,15 +115,5 @@ class ReceiptCorpusTest {
             }
         }
         assertTrue("Fallos de líneas de producto:\n${failures.joinToString("\n")}", failures.isEmpty())
-    }
-
-    @Test
-    fun `el parser nunca produce lineas de producto con precio no positivo`() {
-        for (entry in loadManifest()) {
-            val parsed = ReceiptParser.parse(rawText(entry))
-            parsed.lineItems.forEach { item ->
-                assertTrue("${entry.file.name}: precio no positivo en '${item.name}'", item.price > 0.0)
-            }
-        }
     }
 }

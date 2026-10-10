@@ -92,7 +92,7 @@
     <string name="ocr_bench_show">Ver texto</string>
     <string name="ocr_bench_hide">Ocultar texto</string>
     <string name="settings_ocr_title">Ajustes de reconocimiento</string>
-    <string name="settings_ocr_provider_hint">Cómo extraer los datos del ticket escaneado. Local es gratis y funciona sin conexión; Gemini y Mistral usan internet y dan mejor resultado.</string>
+    <string name="settings_ocr_provider_hint">Cómo extraer los datos del ticket escaneado. Local es gratis y funciona sin conexión; los proveedores de IA usan internet y dan mejor resultado.</string>
     <string name="settings_ocr_provider_local">Local</string>
     <string name="settings_ocr_api_key">Clave API</string>
     <string name="settings_ocr_hint_gemini">Consigue una clave gratuita en aistudio.google.com (tier gratuito). Requiere conexión.</string>
