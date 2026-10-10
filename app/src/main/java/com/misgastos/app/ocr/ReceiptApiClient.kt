@@ -431,7 +431,7 @@ object ReceiptApiClient {
 
     internal fun normalizeDate(text: String?): String? {
         val raw = text?.trim()?.takeIf { it.isNotBlank() } ?: return null
-        val match = Regex("""^(\d{1,2})[/\\-.](\d{1,2})[/\\-.](\d{2,4})$""").find(raw) ?: return raw
+        val match = Regex("""^(\d{1,2})[/\\\\-.](\d{1,2})[/\\\\-.](\d{2,4})$""").find(raw) ?: return raw
         val (d, m, y) = match.destructured
         val day = d.padStart(2, '0')
         val month = m.padStart(2, '0')
