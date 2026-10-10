@@ -19,6 +19,7 @@ import com.misgastos.app.ocr.ReceiptApiConfig
 import com.misgastos.app.ocr.ReceiptApiClient
 import com.misgastos.app.ocr.ReceiptApiContextOverflowException
 import com.misgastos.app.ocr.ReceiptApiInvalidModelException
+import com.misgastos.app.ocr.ReceiptApiNetworkException
 import com.misgastos.app.ocr.ReceiptApiProvider
 import com.misgastos.app.ocr.ReceiptApiRateLimitException
 import com.misgastos.app.ocr.ReceiptApiSettings
@@ -247,6 +248,7 @@ class MisGastosViewModel(
                 is ReceiptApiRateLimitException -> context.getString(R.string.ocr_error_rate_limit)
                 is ReceiptApiInvalidModelException -> context.getString(R.string.ocr_error_invalid_model)
                 is ReceiptApiContextOverflowException -> context.getString(R.string.ocr_error_context_overflow)
+                is ReceiptApiNetworkException -> context.getString(R.string.ocr_error_network)
                 else -> apiError?.message ?: context.getString(R.string.ocr_error_unknown)
             }
             

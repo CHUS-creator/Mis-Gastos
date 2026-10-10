@@ -61,6 +61,12 @@ class ReceiptApiInvalidModelException(message: String, cause: Throwable? = null)
 class ReceiptApiContextOverflowException(message: String, cause: Throwable? = null) : 
     ReceiptApiException(message, cause, 413)
 
+class ReceiptApiNetworkException(message: String, cause: Throwable? = null) : 
+    ReceiptApiException(message, cause, 0)
+
+class ReceiptApiServerException(message: String, cause: Throwable? = null, statusCode: Int? = null) : 
+    ReceiptApiException(message, cause, statusCode ?: 500)
+
 object ReceiptApiClient {
 
     private const val TAG = "ReceiptApiClient"
@@ -79,8 +85,23 @@ object ReceiptApiClient {
     // Context length limits
     private const val MAX_CONTEXT_TOKENS = 32000
     private const val MAX_PROMPT_TOKENS = 8000
+    
+    // Valid models for each provider
+    private val VALID_MISTRAL_MODELS = setOf(
+        "mistral-tiny-latest",
+        "mistral-small-latest", 
+        "mistral-medium-latest",
+        "mistral-large-latest",
+        "codestral-latest"
+    )
+    private val VALID_GEMINI_MODELS = setOf(
+        "gemini-2.0-flash",
+        "gemini-2.0-pro",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro-latest"
+    )
 
-    private val prompt = """
+    private val prompt = """"
         Eres un extractor de datos de tickets de compra (recibos) españoles.
         Devuelve SOLO un objeto JSON valido, sin markdown ni explicaciones:
         {"merchant": string|null, "address": string|null, "date": string|null, "total": number|null,
@@ -108,15 +129,29 @@ object ReceiptApiClient {
             // Validate API key before making request
             if (config.provider != ReceiptApiProvider.LOCAL && config.apiKey.isBlank()) {
                 throw ReceiptApiAuthenticationException(
-                    "API key is required for ${config.provider} provider"
+                    "API key is required for ${config.provider} provider. Please configure your API key."
                 )
             }
             
             // Validate text length to prevent context overflow
             if (rawText.length > MAX_CONTEXT_TOKENS * 4) {
                 throw ReceiptApiContextOverflowException(
-                    "Text is too long (${rawText.length} chars). Maximum allowed: ${MAX_CONTEXT_TOKENS * 4}"
+                    "Text is too long (${rawText.length} chars). Maximum allowed: ${MAX_CONTEXT_TOKENS * 4}. Please shorten the content."
                 )
+            }
+            
+            // Validate model if specified in config
+            if (config.provider != ReceiptApiProvider.LOCAL) {
+                val isValidModel = when (config.provider) {
+                    ReceiptApiProvider.MISTRAL -> MISTRAL_MODEL in VALID_MISTRAL_MODELS
+                    ReceiptApiProvider.GEMINI -> GEMINI_MODEL in VALID_GEMINI_MODELS
+                    else -> true
+                }
+                if (!isValidModel) {
+                    throw ReceiptApiInvalidModelException(
+                        "Invalid model for ${config.provider}. Valid models: ${VALID_MISTRAL_MODELS.joinToString()}"
+                    )
+                }
             }
             
             when (config.provider) {
@@ -284,7 +319,7 @@ object ReceiptApiClient {
             }
             return text
         } catch (e: IOException) {
-            throw ReceiptApiException("Network error: ${e.message}", e)
+            throw ReceiptApiNetworkException("Network error: ${e.message}. Please check your internet connection.", e)
         } finally {
             conn.disconnect()
         }
@@ -332,7 +367,7 @@ object ReceiptApiClient {
             }
             return text
         } catch (e: IOException) {
-            throw ReceiptApiException("Network error: ${e.message}", e)
+            throw ReceiptApiNetworkException("Network error: ${e.message}. Please check your internet connection.", e)
         } finally {
             conn.disconnect()
         }

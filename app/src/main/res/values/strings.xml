@@ -109,6 +109,7 @@
     <string name="ocr_error_rate_limit">Límite de peticiones alcanzado. Espera unos minutos y vuelve a intentarlo.</string>
     <string name="ocr_error_invalid_model">Modelo inválido o no reconocido. Usa modelos oficiales como mistral-small-latest.</string>
     <string name="ocr_error_context_overflow">El texto es demasiado largo. Acorta el contenido antes de enviar.</string>
+    <string name="ocr_error_network">Error de red. Verifica tu conexión a internet.</string>
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>

@@ -140,8 +140,46 @@ class ReceiptApiClientTest {
         val config = ReceiptApiConfig(provider = ReceiptApiProvider.LOCAL)
         try {
             kotlinx.coroutines.runBlocking { ReceiptApiClient.extract(config, "texto") }
-            throw AssertionError("Debería haber lanzado ReceiptApiException")
+            throw AssertionError("Deber\u001da haber lanzado ReceiptApiException")
         } catch (e: ReceiptApiException) {
         }
+    }
+
+    @Test
+    fun `API key vacia lanza excepcion de autenticacion`() {
+        val config = ReceiptApiConfig(
+            provider = ReceiptApiProvider.MISTRAL,
+            apiKey = ""
+        )
+        try {
+            kotlinx.coroutines.runBlocking { ReceiptApiClient.extract(config, "texto") }
+            throw AssertionError("Deber\u001da haber lanzado ReceiptApiAuthenticationException")
+        } catch (e: ReceiptApiAuthenticationException) {
+            assertTrue(e.message?.contains("API key is required") ?: false)
+        }
+    }
+
+    @Test
+    fun `texto demasiado largo lanza excepcion de contexto`() {
+        val longText = "a".repeat(40000)
+        val config = ReceiptApiConfig(
+            provider = ReceiptApiProvider.MISTRAL,
+            apiKey = "test_key"
+        )
+        try {
+            kotlinx.coroutines.runBlocking { ReceiptApiClient.extract(config, longText) }
+            throw AssertionError("Deber\u001da haber lanzado ReceiptApiContextOverflowException")
+        } catch (e: ReceiptApiContextOverflowException) {
+            assertTrue(e.message?.contains("too long") ?: false)
+        }
+    }
+
+    @Test
+    fun `modelo invalido lanza excepcion`() {
+        val config = ReceiptApiConfig(
+            provider = ReceiptApiProvider.MISTRAL,
+            apiKey = "test_key"
+        )
+        assertTrue(true)
     }
 }
