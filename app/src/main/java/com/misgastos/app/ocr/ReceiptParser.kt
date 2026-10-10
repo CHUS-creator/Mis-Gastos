@@ -230,13 +230,21 @@ object ReceiptParser {
             if (match != null) {
                 var name = match.groupValues[1].trim()
                 val price = parseAmount(match.groupValues[2]) ?: continue
+                val unitPrice = numberRegex.find(name)?.let { parseAmount(it.value) }
                 numberRegex.find(name)?.let { name = name.substring(0, it.range.first).trim() }
                 if (name.isBlank()) continue
                 if (price <= 0.0) continue
                 if ((total != null) && (price == total) && (name.length <= 8)) continue
                 if (payKeywords.any { name.lowercase(Locale.getDefault()).startsWith(it) }) continue
                 if (decimalStartRegex.containsMatchIn(name)) continue
-                items.add(ParsedLineItem(name = name, price = price))
+                val (cleanName, qty) = extractLeadingQuantity(name)
+                when {
+                    cleanName != name && unitPriceMatches(unitPrice, qty, price) ->
+                        items.add(ParsedLineItem(name = cleanName, price = price, quantity = qty, unitPrice = unitPrice))
+                    cleanName != name && cleanName.isNotBlank() ->
+                        items.add(ParsedLineItem(name = cleanName, price = price, quantity = 1.0, unitPrice = unitPrice))
+                    else -> items.add(ParsedLineItem(name = name, price = price, unitPrice = unitPrice))
+                }
             } else {
                 val numbers = numberRegex.findAll(line).toList()
                 if (numbers.size < 2) continue
@@ -246,10 +254,34 @@ object ReceiptParser {
                 if (price <= 0.0) continue
                 if (name.count { it.isLetter() } < 2) continue
                 if ((total != null) && (price == total)) continue
-                items.add(ParsedLineItem(name = name, price = price))
+                val (cleanName, qty) = extractLeadingQuantity(name)
+                val unit = numbers.dropLast(1).firstOrNull()?.let { parseAmount(it.value) }
+                if (cleanName.isBlank() || cleanName == name) {
+                    if ((total != null) && (price == total)) continue
+                    items.add(ParsedLineItem(name = name, price = price, unitPrice = unit))
+                } else if (unitPriceMatches(unit, qty, price)) {
+                    items.add(ParsedLineItem(name = cleanName, price = price, quantity = qty, unitPrice = unit))
+                } else {
+                    items.add(ParsedLineItem(name = cleanName, price = price, quantity = 1.0, unitPrice = unit))
+                }
             }
         }
         return items
+    }
+
+    private val leadingQuantityRegex = Regex("^(\\d{1,3})\\s+(.+)$")
+
+    private fun extractLeadingQuantity(name: String): Pair<String, Double> {
+        val m = leadingQuantityRegex.find(name) ?: return name to 1.0
+        val qty = m.groupValues[1].toDoubleOrNull() ?: return name to 1.0
+        val rest = m.groupValues[2].trim()
+        if (rest.count { it.isLetter() } < 2) return name to 1.0
+        return rest to qty
+    }
+
+    private fun unitPriceMatches(unitPrice: Double?, quantity: Double, price: Double): Boolean {
+        if (unitPrice == null || unitPrice <= 0.0 || quantity <= 1.0) return false
+        return kotlin.math.abs(unitPrice * quantity - price) <= 0.05
     }
 
     @Suppress("unused")

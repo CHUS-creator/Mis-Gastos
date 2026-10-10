@@ -97,5 +97,33 @@ class ReceiptParserTest {
         assertNull(parsed.date)
         assertNull(parsed.merchant)
         assertTrue(parsed.lineItems.isEmpty())
+    }    @Test
+    fun `cantidad prefija y precio unitario en formato 3 columnas`() {
+        val raw = """
+            MERCADONA, S.A.
+            Descripci\u00f3n P. Unit Imp (\u20ac)
+            PAN DE PUEBLO 1,55 1,55
+            1 5 BOCADILLOS 1,70 1,70
+            2 RUEDA VERDEJO 2,00 4,00
+            6 AGUA MINERAL NATURAL 1,25 7,50
+            TOTAL 20,85
+        """.trimIndent()
+        val parsed = ReceiptParser.parse(raw)
+        assertEquals(4, parsed.lineItems.size)
+        val bocadillos = parsed.lineItems.first { it.name.contains("BOCADILLOS") }
+        assertEquals("5 BOCADILLOS", bocadillos.name)
+        assertEquals(1.0, bocadillos.quantity, 0.001)
+        assertEquals(1.70, bocadillos.price, 0.001)
+        val agua = parsed.lineItems.first { it.name.contains("AGUA") }
+        assertEquals(6.0, agua.quantity, 0.001)
+        assertEquals(1.25, agua.unitPrice!!, 0.001)
+        assertEquals(7.50, agua.price, 0.001)
+        val verdejo = parsed.lineItems.first { it.name.contains("VERDEJO") }
+        assertEquals(2.0, verdejo.quantity, 0.001)
+        assertEquals(2.00, verdejo.unitPrice!!, 0.001)
+        assertEquals(4.00, verdejo.price, 0.001)
+        val pan = parsed.lineItems.first { it.name.contains("PAN DE PUEBLO") }
+        assertEquals(1.0, pan.quantity, 0.001)
+        assertEquals(1.55, pan.price, 0.001)
     }
 }

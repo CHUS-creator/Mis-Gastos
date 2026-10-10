@@ -95,6 +95,7 @@
     <string name="settings_ocr_provider_hint">How to extract data from the scanned receipt. Local is free and works offline; Gemini and Mistral need internet and give better results.</string>
     <string name="settings_ocr_provider_local">Local</string>
     <string name="settings_ocr_api_key">API key</string>
+    <string name="settings_ocr_model">Model (optional)</string>
     <string name="settings_ocr_hint_gemini">Get a free key at aistudio.google.com (free tier). Requires connection.</string>
     <string name="settings_ocr_hint_mistral">Get a key at console.mistral.ai (paid, ~1 cent per receipt). Requires connection.</string>
     <string name="settings_ocr_save">Save</string>
