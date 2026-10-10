@@ -105,6 +105,10 @@
     <string name="settings_ocr_test_failed">❌ Error: %1$s</string>
     <string name="review_api_error">⚠️ La API falló y se usó el lector local: %1$s</string>
     <string name="ocr_error_unknown">Error desconocido</string>
+    <string name="ocr_error_auth">Error de autenticación: clave API inválida o expirada. Verifica MISTRAL_API_KEY.</string>
+    <string name="ocr_error_rate_limit">Límite de peticiones alcanzado. Espera unos minutos y vuelve a intentarlo.</string>
+    <string name="ocr_error_invalid_model">Modelo inválido o no reconocido. Usa modelos oficiales como mistral-small-latest.</string>
+    <string name="ocr_error_context_overflow">El texto es demasiado largo. Acorta el contenido antes de enviar.</string>
     <string name="scan_camera_error">No se pudo iniciar la cámara. Verifica los permisos e inténtalo de nuevo.</string>
 
     <string name="review_title">Revisar ticket</string>

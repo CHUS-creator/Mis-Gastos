@@ -13,9 +13,13 @@ import com.misgastos.app.data.entity.TransactionType
 import com.misgastos.app.data.entity.LineItem
 import com.misgastos.app.data.repository.MisGastosRepository
 import com.misgastos.app.ocr.OcrRecognizer
+import com.misgastos.app.ocr.ReceiptApiAuthenticationException
 import com.misgastos.app.ocr.ReceiptApiConfig
 import com.misgastos.app.ocr.ReceiptApiClient
+import com.misgastos.app.ocr.ReceiptApiContextOverflowException
+import com.misgastos.app.ocr.ReceiptApiInvalidModelException
 import com.misgastos.app.ocr.ReceiptApiProvider
+import com.misgastos.app.ocr.ReceiptApiRateLimitException
 import com.misgastos.app.ocr.ReceiptApiSettings
 import com.misgastos.app.ocr.ReceiptTemplate
 import com.misgastos.app.data.dao.ProductPriceRow
@@ -235,10 +239,21 @@ class MisGastosViewModel(
                     source = ReceiptSource.API,
                 )
             }
+            
+            // Handle specific API errors with user-friendly messages
+            val errorMessage = when (val apiError = apiOutcome.exceptionOrNull()) {
+                is ReceiptApiAuthenticationException -> context.getString(R.string.ocr_error_auth)
+                is ReceiptApiRateLimitException -> context.getString(R.string.ocr_error_rate_limit)
+                is ReceiptApiInvalidModelException -> context.getString(R.string.ocr_error_invalid_model)
+                is ReceiptApiContextOverflowException -> context.getString(R.string.ocr_error_context_overflow)
+                else -> apiError?.message ?: context.getString(R.string.ocr_error_unknown)
+            }
+            
+            Log.w("MisGastosViewModel", "API extraction failed: ${apiOutcome.exceptionOrNull()?.message}")
+            
             val local = ReceiptParser.parse(text, lookupTemplate(text))
             return local.copy(
-                apiError = apiOutcome.exceptionOrNull()?.message
-                    ?: context.getString(R.string.ocr_error_unknown),
+                apiError = errorMessage,
             )
         }
         val template = lookupTemplate(text)
