@@ -8,6 +8,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.misgastos.app.util.ImageUtils
+import com.misgastos.app.viewmodel.misGastosApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -118,7 +119,7 @@ class OcrRecognizer {
     suspend fun recognizeFromFilePath(filePath: String): String = withContext(Dispatchers.IO) {
         suspendCancellableCoroutine { cont ->
             try {
-                val inputImage = InputImage.fromFilePath(android.app.Application.getInstance(), Uri.parse(filePath))
+                val inputImage = InputImage.fromFilePath(misGastosApplication, Uri.parse(filePath))
                 
                 Log.d(TAG, "Starting OCR processing for file: $filePath")
                 val startTime = System.currentTimeMillis()

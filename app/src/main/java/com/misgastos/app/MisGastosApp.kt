@@ -3,6 +3,7 @@ package com.misgastos.app
 import android.app.Application
 import android.util.Log
 import com.misgastos.app.util.PerformanceMonitor
+import com.misgastos.app.util.StrictModeUtils
 import com.misgastos.app.viewmodel.misGastosApplication
 
 class MisGastosApp : Application() {
