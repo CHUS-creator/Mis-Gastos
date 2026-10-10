@@ -38,13 +38,28 @@ object ReceiptApiSettings {
         )
     }
 
+    /** Limpia una clave pegada: quita espacios, saltos de línea y comillas envolventes. */
+    fun sanitizeKey(raw: String): String {
+        var key = raw.trim()
+        // Quita comillas o backticks envolventes ("clave", 'clave', `clave`)
+        while (key.length >= 2 &&
+            ((key.first() == '"' && key.last() == '"') ||
+                (key.first() == '\'' && key.last() == '\'') ||
+                (key.first() == '`' && key.last() == '`'))
+        ) {
+            key = key.substring(1, key.length - 1).trim()
+        }
+        // Quita espacios y saltos de línea internos (pegados desde consolas/pdf)
+        return key.filterNot { it.isWhitespace() }
+    }
+
     fun save(context: Context, provider: ReceiptApiProvider, apiKey: String) {
         prefs(context).edit()
             .putString(KEY_PROVIDER, provider.name)
-            .putString(KEY_API_KEY, apiKey.trim())
+            .putString(KEY_API_KEY, sanitizeKey(apiKey))
             .apply()
     }
 
     fun apiKey(context: Context): String =
-        prefs(context).getString(KEY_API_KEY, "").orEmpty()
+        sanitizeKey(prefs(context).getString(KEY_API_KEY, "").orEmpty())
 }

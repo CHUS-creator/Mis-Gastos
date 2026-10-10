@@ -104,6 +104,10 @@
     <string name="settings_ocr_test_ok">✅ The API responded correctly</string>
     <string name="settings_ocr_test_failed">❌ Error: %1$s</string>
     <string name="review_api_error">⚠️ The API failed, local parser was used: %1$s</string>
+    <string name="settings_ocr_show_key">Show key</string>
+    <string name="settings_ocr_hide_key">Hide key</string>
+    <string name="settings_ocr_key_length">Detected key: %1$d characters</string>
+    <string name="settings_ocr_key_will_be_cleaned">⚠️ The key contains spaces, line breaks or quotes; it will be cleaned on save (%1$d characters)</string>
     <string name="ocr_error_unknown">Unknown error</string>
     <string name="scan_camera_error">Could not start the camera. Check permissions and try again.</string>
 
