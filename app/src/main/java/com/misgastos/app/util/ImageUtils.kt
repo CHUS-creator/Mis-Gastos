@@ -20,7 +20,7 @@ object ImageUtils {
      * Loads and downsamples a bitmap from a URI to a reasonable size for OCR processing.
      * This should be called from a background thread (Dispatchers.IO).
      */
-    suspend fun loadAndDownsampleBitmap(context: Context, uri: Uri): Bitmap? {
+    fun loadAndDownsampleBitmap(context: Context, uri: Uri): Bitmap? {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return null
             val options = BitmapFactory.Options().apply {
@@ -56,7 +56,7 @@ object ImageUtils {
     /**
      * Loads and downsamples a bitmap from a file path to a reasonable size for OCR processing.
      */
-    suspend fun loadAndDownsampleBitmap(filePath: String): Bitmap? {
+    fun loadAndDownsampleBitmap(filePath: String): Bitmap? {
         return try {
             val file = File(filePath)
             if (!file.exists()) return null
@@ -89,7 +89,7 @@ object ImageUtils {
      * Creates a downscaled temporary file for OCR processing.
      * This is useful when you need a file path for ML Kit.
      */
-    suspend fun createDownscaledTempFile(context: Context, uri: Uri): File? {
+    fun createDownscaledTempFile(context: Context, uri: Uri): File? {
         val bitmap = loadAndDownsampleBitmap(context, uri) ?: return null
         return saveBitmapToTempFile(context, bitmap)
     }
@@ -97,7 +97,7 @@ object ImageUtils {
     /**
      * Creates a downscaled temporary file from a bitmap.
      */
-    suspend fun saveBitmapToTempFile(context: Context, bitmap: Bitmap): File? {
+    fun saveBitmapToTempFile(context: Context, bitmap: Bitmap): File? {
         return try {
             val tempDir = File(context.cacheDir, "ocr_temp")
             if (!tempDir.exists()) tempDir.mkdirs()
